@@ -1,0 +1,56 @@
+Changes for test 3 since test 2
+
+General:
+ + Updated look for plugin about boxes
+
+Pcsx:
+ + Made the emulator pause when it's not active
+ + Changed save state naming format to make them unique for a single game
+ + Fixed a serious stability bug for freeze saves when using a BIOS
+ + Increased emulation speed for dynarec mode :)
+ + Fixed a bug in the exception firing mechanism - final fantasy tactics now works correctly
+ + Made some progress toward making the timing of dynarec and regular mode exactly the same
+ + Implemented a faster way to handle self-modifying code in dynarec mode
+ + Fixed a bug that caused PCSX to ignore the default system region setting causing weirdness in PAL games
+
+PeopsSoftGL:
+ + Fullscreen mode now uses a 4:3 aspect ratio
+ + Partially updated to 1.16 sources
+ + Added a configuration dialog and about box
+ + Improved frame skipping code (no idle loops)
+
+PeopsSPU:
+ + Added a hack to make XA audio play smoothly in some cases at least
+
+
+Changes for test 2 since test 1
+
+General:
+ + Added a new simple input plugin, designed to be the default input plugin.
+
+Pcsx:
+ + Fixed code that handles live plugin changes.
+ + Fixed freeze / defrost bug - don't expect old freeze files to work correctly
+ + Changed fullscreen key to ESC
+ + Changed timer handling in core CPU emulation code for small speed-up
+ + Removed Memory Card menu until functionality is developed
+
+PeopsSoftGL:
+ - Hopefully fixed a opengl rendering bug that could cause kernel panics when resizing the main view.
+ + Improved screen updates when going out of fullscreen mode.
+ + Added the ability to scale the window proportionally when holding down shift and resizing.
+ + Made it accept non-accelerated OpenGL context's in order to "support" machines with old graphic cards.
+ + Added small hack to allow the ESC key to switch to fullscreen
+ + Added FPS display support
+ + Removed the Beeps when using the keyboard in fullscreen mode
+
+CDDeviceInterface:
+ + Fixed a bug affecting cd's with multiple tracks.
+ + Changed the way TOC information is read. Now uses IORegistry instead of ioctl calls to fix compatibility problems.
+ + Fixed a memory leak.
+
+PeopsSPU:
+ + Added MacOS X configuration interface
+ + Updated from v1.0.7 to v1.0.9
+ + Converted to bundle format.
+ + Removed redundant dependency on X11 libs, so it will also work for people who doesn't have X11 installed.
