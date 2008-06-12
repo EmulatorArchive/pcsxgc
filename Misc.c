@@ -81,7 +81,7 @@ struct iso_directory_record {
 void mmssdd( char *b, char *p )
  {
 	int m, s, d;
-#if defined(__DREAMCAST__) || defined(__MACOSX__)
+#if defined(__DREAMCAST__) || defined(__MACOSX__) || defined(__GAMECUBE__)
 	int block = (b[0]&0xff) | ((b[1]&0xff)<<8) | ((b[2]&0xff)<<16) | (b[3]<<24);
 #else
 	int block = *((int*)b);
@@ -436,7 +436,7 @@ int SaveState(const char *file) {
 	gzwrite(f, psxM, 0x00200000);
 	gzwrite(f, psxR, 0x00080000);
 	gzwrite(f, psxH, 0x00010000);
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	{
 		psxRegisters tmpRegs;
 
@@ -464,7 +464,7 @@ int SaveState(const char *file) {
 	gpufP = (GPUFreeze_t *) malloc(sizeof(GPUFreeze_t));
 	gpufP->ulFreezeVersion = 1;
 	GPU_freeze(1, gpufP);
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	gpufP->ulFreezeVersion = SWAP32p(&gpufP->ulFreezeVersion);
 	gpufP->ulStatus = SWAP32p(&gpufP->ulStatus);
 	//for (i=0; i<256; i++)
@@ -477,14 +477,14 @@ int SaveState(const char *file) {
 	spufP = (SPUFreeze_t *) malloc(16);
 	SPU_freeze(2, spufP);
 	Size = spufP->Size;
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	spufP->Size = SWAP32p(&spufP->Size);
 #endif
 	gzwrite(f, &spufP->Size, 4);
 	free(spufP);
 	spufP = (SPUFreeze_t *) malloc(Size);
 	SPU_freeze(1, spufP);
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	spufP->PluginVersion = SWAP32p(&spufP->PluginVersion);
 	spufP->Size = SWAP32p(&spufP->Size);
 	
@@ -545,7 +545,7 @@ int LoadState(const char *file) {
 	gzread(f, psxH, 0x00010000);
 
 	gzread(f, (void*)&psxRegs, sizeof(psxRegs));
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	{
 		for (i=0; i<sizeof(psxGPRRegs)/4; i++)
 			psxRegs.GPR.r[i] = SWAP32p(&psxRegs.GPR.r[i]);
@@ -567,7 +567,7 @@ int LoadState(const char *file) {
 	// gpu
 	gpufP = (GPUFreeze_t *) malloc (sizeof(GPUFreeze_t));
 	gzread(f, gpufP, sizeof(GPUFreeze_t));
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	gpufP->ulFreezeVersion = SWAP32p(&gpufP->ulFreezeVersion);
 	gpufP->ulStatus = SWAP32p(&gpufP->ulStatus);
 	//for (i=0; i<256; i++)
@@ -578,12 +578,12 @@ int LoadState(const char *file) {
 
 	// spu
 	gzread(f, &Size, 4);
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	Size = SWAP32(Size);
 #endif
 	spufP = (SPUFreeze_t *) malloc (Size);
 	gzread(f, spufP, Size);
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 	spufP->PluginVersion = SWAP32p(&spufP->PluginVersion);
 	spufP->Size = SWAP32p(&spufP->Size);
 	

@@ -43,7 +43,7 @@ typedef struct {
 	HMENU hMenu;         // Main window menu
 } AppData;
 
-#elif defined (__LINUX__) || defined (__MACOSX__)
+#elif defined (__LINUX__) || defined (__MACOSX__) || defined(__GAMECUBE__)
 
 #include <sys/types.h>
 
@@ -51,7 +51,7 @@ typedef struct {
 
 #endif
 
-#if defined (__LINUX__) || defined (__MACOSX__)
+#if defined (__LINUX__) || defined (__MACOSX__) || defined(__GAMECUBE__)
 #define strnicmp strncasecmp
 #endif
 
