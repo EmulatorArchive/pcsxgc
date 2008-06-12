@@ -18,7 +18,14 @@
 
 #ifndef __PSXCOMMON_H__
 #define __PSXCOMMON_H__
-
+#include <gccore.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <string.h>
+#include <time.h>
 #include "System.h"
 #if defined(__DREAMCAST__)
 #include <zlib/zlib.h>

@@ -5,6 +5,8 @@
 */
 
 #include <gccore.h>
+#include <stdint.h>
+#include <sys/types.h>
 #include <ogc/pad.h>
 #include "plugins.h"
 
@@ -42,11 +44,8 @@ long PAD__close(void) {
 long PAD__readPort1(PadDataS* pad) {
 //	SysPrintf("start PAD1_readPort()\r\n");
 	int b = PAD_ButtonsHeld(0);
-	uint16 pad_status = 0xffff;	//bit pointless why is this done this way? :\
+	uint16_t pad_status = 0xffff;	//bit pointless why is this done this way? :\
 	 
-	if (cont_get_cond(c, &cond) < 0) {
-		printf("Error reading controller\n");
-	}
 	if (!(b & PAD_BUTTON_START))
 		pad_status &= ~(1<<3);
 	if (!(b & PAD_BUTTON_A))
@@ -73,13 +72,10 @@ long PAD__readPort1(PadDataS* pad) {
 	return 0;
 }
 
-long PAD__readPort2(PadDataS*a) {
+long PAD__readPort2(PadDataS* pad) {
 	int b = PAD_ButtonsHeld(1);
-	uint16 pad_status = 0xffff;	//bit pointless why is this done this way? :\
+	uint16_t pad_status = 0xffff;	//bit pointless why is this done this way? :\
 	 
-	if (cont_get_cond(c, &cond) < 0) {
-		printf("Error reading controller\n");
-	}
 	if (!(b & PAD_BUTTON_START))
 		pad_status &= ~(1<<3);
 	if (!(b & PAD_BUTTON_A))

@@ -423,8 +423,8 @@ void psxSLTU(u32 opcode) 	{ if (!_Rd_) return; _rRd_ = _u32(_rRs_) < _u32(_rRt_)
 *********************************************************/
 void psxDIV(u32 opcode) {
 	if (_i32(_rRt_) != 0) {
-		_i32(_rLo_) = _i32(_rRs_) / _i32(_rRt_);
-		_i32(_rHi_) = _i32(_rRs_) % _i32(_rRt_);
+		_rLo_ = _i32(_rRs_) / _i32(_rRt_);
+		_rHi_ = _i32(_rRs_) % _i32(_rRt_);
 	}
 }
 
@@ -468,7 +468,7 @@ void psxBLTZAL(u32 opcode) { RepZBranchLinki32(<) }   // Branch if Rs <  0 and l
 * Format:  OP rd, rt, sa                                 *
 *********************************************************/
 void psxSLL(u32 opcode) { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) << _Sa_; } // Rd = Rt << sa
-void psxSRA(u32 opcode) { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRt_) >> _Sa_; } // Rd = Rt >> sa (arithmetic)
+void psxSRA(u32 opcode) { if (!_Rd_) return; _rRd_ = _i32(_rRt_) >> _Sa_; } // Rd = Rt >> sa (arithmetic)
 void psxSRL(u32 opcode) { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) >> _Sa_; } // Rd = Rt >> sa (logical)
 
 /*********************************************************
@@ -476,7 +476,7 @@ void psxSRL(u32 opcode) { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) >> _Sa_; 
 * Format:  OP rd, rt, rs                                 *
 *********************************************************/
 void psxSLLV(u32 opcode) { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) << _u32(_rRs_); } // Rd = Rt << rs
-void psxSRAV(u32 opcode) { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRt_) >> _u32(_rRs_); } // Rd = Rt >> rs (arithmetic)
+void psxSRAV(u32 opcode) { if (!_Rd_) return; _rRd_ = _i32(_rRt_) >> _u32(_rRs_); } // Rd = Rt >> rs (arithmetic)
 void psxSRLV(u32 opcode) { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) >> _u32(_rRs_); } // Rd = Rt >> rs (logical)
 
 /*********************************************************
@@ -555,7 +555,7 @@ void psxJALR(u32 opcode) {
 
 void psxLB(u32 opcode) {
 	if (_Rt_) {
-		_i32(_rRt_) = (char)psxMemRead8(_oB_); 
+		_rRt_ = (char)psxMemRead8(_oB_); 
 	} else {
 		psxMemRead8(_oB_); 
 	}
@@ -571,7 +571,7 @@ void psxLBU(u32 opcode) {
 
 void psxLH(u32 opcode) {
 	if (_Rt_) {
-		_i32(_rRt_) = (short)psxMemRead16(_oB_);
+		_rRt_ = (short)psxMemRead16(_oB_);
 	} else {
 		psxMemRead16(_oB_);
 	}
@@ -686,8 +686,8 @@ void psxSWR(u32 opcode) {
 * Moves between GPR and COPx                             *
 * Format:  OP rt, fs                                     *
 *********************************************************/
-void psxMFC0(u32 opcode) { if (!_Rt_) return; _i32(_rRt_) = (int)_rFs_; }
-void psxCFC0(u32 opcode) { if (!_Rt_) return; _i32(_rRt_) = (int)_rFs_; }
+void psxMFC0(u32 opcode) { if (!_Rt_) return; _rRt_ = (int)_rFs_; }
+void psxCFC0(u32 opcode) { if (!_Rt_) return; _rRt_ = (int)_rFs_; }
 
 void psxTestSWInts() {
 	// the next code is untested, if u know please

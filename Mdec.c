@@ -24,7 +24,7 @@
 #include "PsxCommon.h"
 #include "Mdec.h"
 
-#define FIXED
+//#define FIXED
 
 #define CONST_BITS  8
 #define PASS1_BITS  2

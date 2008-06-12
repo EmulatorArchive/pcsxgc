@@ -1,3 +1,39 @@
+/* General Purpose Registers (GPRs) */
+
+#define	r0	0
+#define	r1	1
+#define	sp	1
+#define	r2	2
+#define	toc	2
+#define	r3	3
+#define	r4	4
+#define	r5	5
+#define	r6	6
+#define	r7	7
+#define	r8	8
+#define	r9	9
+#define	r10	10
+#define	r11	11
+#define	r12	12
+#define	r13	13
+#define	r14	14
+#define	r15	15
+#define	r16	16
+#define	r17	17
+#define	r18	18
+#define	r19	19
+#define	r20	20
+#define	r21	21
+#define	r22	22
+#define	r23	23
+#define	r24	24
+#define	r25	25
+#define	r26	26
+#define	r27	27
+#define	r28	28
+#define	r29	29
+#define	r30	30
+#define	r31	31
 
 
 #define OLD_REGISTER_OFFSET	(19*4)
@@ -6,8 +42,8 @@
 /*asm void recRun(register void (*func)(), register u32 hw1, register u32 hw2)*/
         .text
         .align  4
-        .globl  _recRun
-_recRun:
+        .globl  recRun
+recRun:
 	/* prologue code */
 	mflr	r0
 	stmw	r13, -(32-13)*4(r1)
@@ -25,8 +61,8 @@ asm void returnPC()
 {*/
         .text
         .align  4
-        .globl  _returnPC
-_returnPC:
+        .globl  returnPC
+returnPC:
 	// end code
 	lwz		r0, (32-13)*4+20(r1)
 	addi	r1, r1, (32-13)*4+12
@@ -39,15 +75,15 @@ _returnPC:
 
         .text
         .align  4
-        .globl  _dynMemRead8
-_dynMemRead8:
+        .globl  dynMemRead8
+dynMemRead8:
 // assumes that memory pointer is in r30
 	addis    r2,r3,-0x1f80
 	srwi.     r4,r2,16
 	bne+     norm8
 	cmplwi   r2,0x1000
 	blt-     norm8
-	b        _psxHwRead8
+	b        psxHwRead8
 norm8:
 	clrlwi   r5,r3,3
 	lbzx     r3,r5,r30
@@ -55,15 +91,15 @@ norm8:
 
         .text
         .align  4
-        .globl  _dynMemRead16
-_dynMemRead16:
+        .globl  dynMemRead16
+dynMemRead16:
 // assumes that memory pointer is in r30
 	addis    r2,r3,-0x1f80
 	srwi.     r4,r2,16
 	bne+     norm16
 	cmplwi   r2,0x1000
 	blt-     norm16
-	b        _psxHwRead16
+	b        psxHwRead16
 norm16:
 	clrlwi   r5,r3,3
 	lhbrx    r3,r5,r30
@@ -71,15 +107,15 @@ norm16:
 
         .text
         .align  4
-        .globl  _dynMemRead32
-_dynMemRead32:
+        .globl  dynMemRead32
+dynMemRead32:
 // assumes that memory pointer is in r30
 	addis    r2,r3,-0x1f80
 	srwi.     r4,r2,16
 	bne+     norm32
 	cmplwi   r2,0x1000
 	blt-     norm32
-	b        _psxHwRead32
+	b        psxHwRead32
 norm32:
 	clrlwi   r5,r3,3
 	lwbrx    r3,r5,r30
@@ -98,15 +134,15 @@ P | !(N | !Z)
 
         .text
         .align  4
-        .globl  _dynMemWrite32
-_dynMemWrite32:
+        .globl  dynMemWrite32
+dynMemWrite32:
 // assumes that memory pointer is in r30
 	addis    r2,r3,-0x1f80
 	srwi.    r5,r2,16
 	bne+     normw32
 	cmplwi   r2,0x1000
 	blt      normw32
-	b        _psxHwWrite32
+	b        psxHwWrite32
 normw32:
 	mtcrf    0xFF, r3
 	clrlwi   r5,r3,3

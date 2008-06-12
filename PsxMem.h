@@ -19,7 +19,7 @@
 #ifndef __PSXMEMORY_H__
 #define __PSXMEMORY_H__
 
-#if defined(__MACOSX__)
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
 /*
 #define _SWAP16(b) ((((unsigned char*)&(b))[0]&0xff) | (((unsigned char*)&(b))[1]&0xff)<<8)
 #define _SWAP32(b) ((((unsigned char*)&(b))[0]&0xff) | ((((unsigned char*)&(b))[1]&0xff)<<8) | ((((unsigned char*)&(b))[2]&0xff)<<16) | (((unsigned char*)&(b))[3]<<24))

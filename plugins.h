@@ -30,6 +30,11 @@ typedef void* HWND;
 #define CALLBACK
 #include "Dreamcast/Plugin.h"
 #endif
+#if defined(__GAMECUBE__)
+typedef void* HWND;
+#define CALLBACK
+#include "Gamecube/Plugin.h"
+#endif
 #ifndef EXT
 #define EXT extern
 #endif

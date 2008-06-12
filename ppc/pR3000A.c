@@ -24,9 +24,9 @@
 #include <string.h>
 #include <time.h>
 #include <sys/types.h>
-#include <sys/mman.h>
+//#include <sys/mman.h>
 
-#include <Carbon/Carbon.h>
+//#include <Carbon/Carbon.h>
 
 #include "PsxCommon.h"
 #include "ppc.h"
@@ -3545,7 +3545,7 @@ static void recRecompile() {
 
 done:
 	if (dump) iDumpBlock(ptr);
-	MakeDataExecutable(ptr, ((u8*)ppcPtr)-((u8*)ptr));
+	//MakeDataExecutable(ptr, ((u8*)ppcPtr)-((u8*)ptr));
 	//msync((void *)((int)ptr & ~4095), ((int)ppcPtr / 4096)-((int)ptr / 4069) + 1, MS_INVALIDATE);
 	
 #if 0
@@ -3560,10 +3560,10 @@ done:
 		pc &= ~4095;
 		
 		addr = PSXM(pcold);
-		if ((u8 *)addr < (u8 *)psxM + 0x00800000) {
-			for (i=0; i<0x00800000; i+=0x00200000)
-				mprotect(addr+i, (pc-pcold) + 4096, PROT_READ);
-		}
+//		if ((u8 *)addr < (u8 *)psxM + 0x00800000) {
+//			for (i=0; i<0x00800000; i+=0x00200000)
+//				mprotect(addr+i, (pc-pcold) + 4096, PROT_READ);
+//		}
 	}
 #endif
 	//mprotect(recMem, RECMEM_SIZE, PROT_EXEC|PROT_READ/*|PROT_WRITE*/);

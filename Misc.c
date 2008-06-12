@@ -410,7 +410,7 @@ int Load(char *ExePath) {
 
 // STATES
 
-const char PcsxHeader[32] = "STv3 PCSX v" PCSX_VERSION;
+const char PcsxHeader[32] = "STv3 PCSX v 1.5t3";
 
 int SaveState(const char *file) {
 	gzFile f;
@@ -539,9 +539,9 @@ int LoadState(const char *file) {
 	gzseek(f, 128*96*3, SEEK_CUR);
 
 	gzread(f, psxM, 0x00200000);
-	mprotect(psxR, 0x00080000, PROT_READ|PROT_WRITE);
+	//mprotect(psxR, 0x00080000, PROT_READ|PROT_WRITE);
 	gzread(f, psxR, 0x00080000);
-	mprotect(psxR, 0x00080000, PROT_READ);
+	//mprotect(psxR, 0x00080000, PROT_READ);
 	gzread(f, psxH, 0x00010000);
 
 	gzread(f, (void*)&psxRegs, sizeof(psxRegs));
