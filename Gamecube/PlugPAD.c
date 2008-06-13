@@ -13,14 +13,14 @@
 long  PadFlags = 0;
 
 long PAD__init(long flags) {
-//	SysPrintf("start PAD_init()\r\n");
+	SysPrintf("start PAD_init()\r\n");
 
 //	printf("Flags: %08x\n", flags);
 	PadFlags |= flags;
 
 	/* Read Configuration here */
 
-//	SysPrintf("end PAD_init()\r\n");
+	SysPrintf("end PAD_init()\r\n");
 	
 	return 0;
 }
@@ -31,9 +31,9 @@ long PAD__shutdown(void) {
 
 long PAD__open(void)
 {
-//	SysPrintf("start PAD1_open()\r\n");
+//	SysPrintf("start PAD_open()\r\n");
 
-//	SysPrintf("end PAD1_open()\r\n");
+//	SysPrintf("end PAD_open()\r\n");
 	return 0;
 }
 

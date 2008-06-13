@@ -25,16 +25,6 @@ typedef long (* GPUopen)(unsigned long *, char *, char *);
 
 long GPU__open(void);          
 
-typedef long (* SPUopen)(void);
-
-long SPU__open(void);			
-
-typedef long (* PADopen)(unsigned long *);
-
-long PAD1__open(void);			
-
-long PAD2__open(void);
-
 typedef long (* NETopen)(unsigned long *);
 
 #endif /* __PLUGIN_H__ */

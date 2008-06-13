@@ -39,6 +39,36 @@ void SysUpdate();
 void SysRunGui();
 void SysMessage(char *fmt, ...);
 
+static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
+GXRModeObj *vmode;				/*** Graphics Mode Object ***/
+void ScanPADSandReset() { PAD_ScanPads(); }
+static void Initialise (void){
+  static int whichfb = 0;        /*** Frame buffer toggle ***/
+  VIDEO_Init();
+  PAD_Init();
+  PAD_Reset(0xf0000000);
+
+  
+  vmode = VIDEO_GetPreferredMode(NULL);
+    
+  VIDEO_Configure (vmode);
+  xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf)); //assume PAL largest
+  xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf));	//fixme for progressive?
+  console_init (xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight,
+        vmode->fbWidth * 2);
+  VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
+  VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
+  VIDEO_SetNextFramebuffer (xfb[0]);
+  //VIDEO_SetPostRetraceCallback (PAD_ScanPads);
+  VIDEO_SetPostRetraceCallback (ScanPADSandReset);
+  VIDEO_SetBlack (0);
+  VIDEO_Flush ();
+  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+  if (vmode->viTVMode & VI_NON_INTERLACE)
+    VIDEO_WaitVSync ();
+
+}
+
 // Plugin structure
 #include "GamecubePlugins.h"
 PluginTable plugins[] =
@@ -51,23 +81,7 @@ PluginTable plugins[] =
 	  PLUGIN_SLOT_6,
 	  PLUGIN_SLOT_7 
 };
-int num_populated = 0;
 
-void populate_PAD1()
-{
-	strcpy(plugins[num_populated].lib,"PAD1");
-	
-}
-
-void populate_plugins()
-{
-	populate_PAD1();
-	//populate_PAD2();
-	//populate_SPU();
-	//populate_CDR();
-	//populate_GPU();
-	//populate_NET();
-}
 
 /* draw background */
 void draw_splash(void)
@@ -83,6 +97,7 @@ int main(int argc, char *argv[]) {
 	int loadst = 0;
 	int i;
 */
+	Initialise();
     draw_splash();
 	
 	/* Configure pcsx */
@@ -102,8 +117,9 @@ int main(int argc, char *argv[]) {
 
 	/* Start gui */
 //	menu_start();
-
-	OpenPlugins();
+	LoadPlugins();
+	while(1);
+	//OpenPlugins();
 	SysReset();
 
     SysPrintf("CheckCdrom()\r\n");
@@ -164,8 +180,8 @@ void SysPrintf(char *fmt, ...) {
 
 void *SysLoadLibrary(char *lib) {
 	int i;
-	for(i=0; i<NUM_PLUGINS; ++i)
-		if(plugins[i].lib && !strcmp(lib, plugins[i].lib))
+	for(i=0; i<NUM_PLUGINS; i++)
+		if((plugins[i].lib != NULL) && (!strcmp(lib, plugins[i].lib)))
 			return (void*)i;
 	return NULL;
 }
@@ -173,7 +189,7 @@ void *SysLoadLibrary(char *lib) {
 void *SysLoadSym(void *lib, char *sym) {
 	PluginTable* plugin = plugins + (int)lib;
 	int i;
-	for(i=0; i<plugin->numSyms; ++i)
+	for(i=0; i<plugin->numSyms; i++)
 		if(plugin->syms[i].sym && !strcmp(sym, plugin->syms[i].sym))
 			return plugin->syms[i].pntr;
 	return NULL;

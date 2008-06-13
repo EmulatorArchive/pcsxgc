@@ -22,7 +22,7 @@
 
 #define EXT
 #include "PsxCommon.h"
-
+#include "GamecubePlugins.h"
 #define CheckErr(func) \
     err = SysLibError(); \
     if (err != NULL) { SysPrintf("Error loading %s: %s\n", func, err); return -1; }
@@ -727,8 +727,8 @@ int LoadPlugins() {
 	char Plugin[256];
 
 	if (LoadCDRplugin("CDR") == -1) return -1;
-	if (LoadGPUplugin("GPU") == -1) return -1;
-	if (LoadSPUplugin("SPU") == -1) return -1;
+//	if (LoadGPUplugin("GPU") == -1) return -1;
+//	if (LoadSPUplugin("SPU") == -1) return -1;
 	if (LoadPAD1plugin("PAD1") == -1) return -1;
 	if (LoadPAD2plugin("PAD2") == -1) return -1;
 
@@ -742,11 +742,11 @@ int LoadPlugins() {
 #ifndef __MACOSX__
 	ret = CDR_init();
 	if (ret < 0) { SysPrintf ("CDRinit error : %d\n", ret); return -1; }
-	ret = GPU_init();
+/*	ret = GPU_init();
 	if (ret < 0) { SysPrintf ("GPUinit error: %d\n", ret); return -1; }
 	ret = SPU_init();
 	if (ret < 0) { SysPrintf ("SPUinit error: %d\n", ret); return -1; }
-	ret = PAD1_init(1);
+*/	ret = PAD1_init(1);
 	if (ret < 0) { SysPrintf ("PAD1init error: %d\n", ret); return -1; }
 	ret = PAD2_init(2);
 	if (ret < 0) { SysPrintf ("PAD2init error: %d\n", ret); return -1; }

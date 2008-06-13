@@ -254,8 +254,10 @@ long CDR__open(void)
 }
 
 long CDR__init(void) {
+	SysPrintf("start CDR_init()\r\n");
 	strcpy(CDConfiguration.dn, "/cd");
 	strcpy(CDConfiguration.fn, "psxcd.bin");
+	SysPrintf("end CDR_init()\r\n");
 	return 0;
 }
 

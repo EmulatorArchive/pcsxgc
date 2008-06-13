@@ -34,6 +34,7 @@ typedef void* HWND;
 typedef void* HWND;
 #define CALLBACK
 #include "Gamecube/Plugin.h"
+#include "Gamecube/GamecubePlugins.h"
 #endif
 #ifndef EXT
 #define EXT extern
