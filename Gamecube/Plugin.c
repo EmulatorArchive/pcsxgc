@@ -178,22 +178,22 @@ int _OpenPlugins() {
 	GPU_clearDynarec(clearDynarec);
 
 	ret = CDR_open();
-	if (ret < 0) { SysMessage(_("Error Opening CDR Plugin")); return -1; }
+	if (ret < 0) { SysPrintf("Error Opening CDR Plugin\n"); return -1; }
 	ret = SPU_open();
-	if (ret < 0) { SysMessage(_("Error Opening SPU Plugin")); return -1; }
+	if (ret < 0) { SysPrintf("Error Opening SPU Plugin\n"); return -1; }
 	SPU_registerCallback(SPUirq);
 	ret = GPU_open(&gpuDisp, "PCSX", NULL);
-	if (ret < 0) { SysMessage(_("Error Opening GPU Plugin")); return -1; }
+	if (ret < 0) { SysPrintf("Error Opening GPU Plugin\n"); return -1; }
 	ret = PAD1_open(&gpuDisp);
-	if (ret < 0) { SysMessage(_("Error Opening PAD1 Plugin")); return -1; }
+	if (ret < 0) { SysPrintf("Error Opening PAD1 Plugin\n"); return -1; }
 	ret = PAD2_open(&gpuDisp);
-	if (ret < 0) { SysMessage(_("Error Opening PAD2 Plugin")); return -1; }
-/*
+	if (ret < 0) { SysPrintf("Error Opening PAD2 Plugin\n"); return -1; }
+
 	if (Config.UseNet && NetOpened == 0) {
 		netInfo info;
 		char path[256];
 
-		strcpy(info.EmuName, "PCSX v" PCSX_VERSION);
+		strcpy(info.EmuName, "PCSX v1.5b3");
 		strncpy(info.CdromID, CdromId, 9);
 		strncpy(info.CdromLabel, CdromLabel, 9);
 		info.psxMem = psxM;
@@ -242,7 +242,7 @@ int _OpenPlugins() {
 	} else if (Config.UseNet) {
 		NET_resume();
 	}
-*/
+
 	return 0;
 }
 
@@ -263,15 +263,15 @@ void ClosePlugins() {
 	/*signal(SIGINT, SIG_DFL);
 	signal(SIGPIPE, SIG_DFL);*/
 	ret = CDR_close();
-	if (ret < 0) { SysMessage(_("Error Closing CDR Plugin")); return; }
+	if (ret < 0) { SysPrintf("Error Closing CDR Plugin\n"); return; }
 	ret = SPU_close();
-	if (ret < 0) { SysMessage(_("Error Closing SPU Plugin")); return; }
+	if (ret < 0) { SysPrintf("Error Closing SPU Plugin\n"); return; }
 	ret = PAD1_close();
-	if (ret < 0) { SysMessage(_("Error Closing PAD1 Plugin")); return; }
+	if (ret < 0) { SysPrintf("Error Closing PAD1 Plugin\n"); return; }
 	ret = PAD2_close();
-	if (ret < 0) { SysMessage(_("Error Closing PAD2 Plugin")); return; }
+	if (ret < 0) { SysPrintf("Error Closing PAD2 Plugin\n"); return; }
 	ret = GPU_close();
-	if (ret < 0) { SysMessage(_("Error Closing GPU Plugin")); return; }
+	if (ret < 0) { SysPrintf("Error Closing GPU Plugin\n"); return; }
 
 	if (Config.UseNet) {
 		NET_pause();
@@ -289,18 +289,18 @@ void ResetPlugins() {
 	if (Config.UseNet) NET_shutdown(); 
 
 	ret = CDR_init();
-	if (ret < 0) { SysMessage(_("CDRinit error: %d"), ret); return; }
+	if (ret < 0) { SysPrintf("CDRinit error: %d\n", ret); return; }
 	ret = GPU_init();
-	if (ret < 0) { SysMessage(_("GPUinit error: %d"), ret); return; }
+	if (ret < 0) { SysPrintf("GPUinit error: %d\n", ret); return; }
 	ret = SPU_init();
-	if (ret < 0) { SysMessage(_("SPUinit error: %d"), ret); return; }
+	if (ret < 0) { SysPrintf("SPUinit error: %d\n", ret); return; }
 	ret = PAD1_init(1);
-	if (ret < 0) { SysMessage(_("PAD1init error: %d"), ret); return; }
+	if (ret < 0) { SysPrintf("PAD1init error: %d\n", ret); return; }
 	ret = PAD2_init(2);
-	if (ret < 0) { SysMessage(_("PAD2init error: %d"), ret); return; }
+	if (ret < 0) { SysPrintf("PAD2init error: %d\n", ret); return; }
 	if (Config.UseNet) {
 		ret = NET_init();
-		if (ret < 0) { SysMessage(_("NETinit error: %d"), ret); return; }
+		if (ret < 0) { SysPrintf("NETinit error: %d\n", ret); return; }
 	}
 
 	NetOpened = 0;

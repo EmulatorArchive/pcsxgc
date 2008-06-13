@@ -49,7 +49,25 @@ PluginTable plugins[] =
 	  PLUGIN_SLOT_4,
 	  PLUGIN_SLOT_5,
 	  PLUGIN_SLOT_6,
-	  PLUGIN_SLOT_7 };
+	  PLUGIN_SLOT_7 
+};
+int num_populated = 0;
+
+void populate_PAD1()
+{
+	strcpy(plugins[num_populated].lib,"PAD1");
+	
+}
+
+void populate_plugins()
+{
+	populate_PAD1();
+	//populate_PAD2();
+	//populate_SPU();
+	//populate_CDR();
+	//populate_GPU();
+	//populate_NET();
+}
 
 /* draw background */
 void draw_splash(void)
@@ -71,6 +89,7 @@ int main(int argc, char *argv[]) {
 	memset(&Config, 0, sizeof(PcsxConfig));
 	strcpy(Config.Bios, "scph1001.bin"); // Use actual BIOS
 	strcpy(Config.BiosDir, "/PCSX/");
+	strcpy(Config.Net,"Disabled");
 //	Config.Cpu = 1;	//?
 	Config.Cpu = 0;
 //	Config.CdTiming = 0;	//no longer used
