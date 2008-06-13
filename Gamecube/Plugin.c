@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <zlib.h>
-#include "PSXCommon.h"
+#include "PsxCommon.h"
 
 #include "plugins.h"
 #include "Spu.h"

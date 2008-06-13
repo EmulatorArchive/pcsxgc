@@ -39,6 +39,17 @@ void SysUpdate();
 void SysRunGui();
 void SysMessage(char *fmt, ...);
 
+// Plugin structure
+#include "GamecubePlugins.h"
+PluginTable plugins[] =
+	{ PLUGIN_SLOT_0,
+	  PLUGIN_SLOT_1,
+	  PLUGIN_SLOT_2,
+	  PLUGIN_SLOT_3,
+	  PLUGIN_SLOT_4,
+	  PLUGIN_SLOT_5,
+	  PLUGIN_SLOT_6,
+	  PLUGIN_SLOT_7 };
 
 /* draw background */
 void draw_splash(void)
@@ -133,15 +144,24 @@ void SysPrintf(char *fmt, ...) {
 }
 
 void *SysLoadLibrary(char *lib) {
-//	return dlopen(lib, RTLD_NOW);
+	int i;
+	for(i=0; i<NUM_PLUGINS; ++i)
+		if(plugins[i].lib && !strcmp(lib, plugins[i].lib))
+			return (void*)i;
+	return NULL;
 }
 
 void *SysLoadSym(void *lib, char *sym) {
-//	return dlsym(lib, sym);
+	PluginTable* plugin = plugins + (int)lib;
+	int i;
+	for(i=0; i<plugin->numSyms; ++i)
+		if(plugin->syms[i].sym && !strcmp(sym, plugin->syms[i].sym))
+			return plugin->syms[i].pntr;
+	return NULL;
 }
 
 char *SysLibError() {
-//	return dlerror();
+	return NULL;
 }
 
 void SysCloseLibrary(void *lib) {
