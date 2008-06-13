@@ -109,8 +109,8 @@ int main(int argc, char *argv[]) {
 	strcpy(Config.BiosDir, "PSXISOS/");
 	strcpy(Config.Net,"Disabled");
 
-	Config.Cpu = 1;	//?
-//	Config.Cpu = 0;
+	Config.Cpu = 1;	//interpreter
+
 //	Config.CdTiming = 0;	//no longer used
 	Config.PsxOut = 1;
 	Config.HLE = 1;
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
 
 //	SysPrintf("Load()\r\n");
 //	Load("/rd/pdx-dlcm.psx");
-//	LoadCdrom();		//code dies here if we try to execute cd-rom
+	LoadCdrom();		//code dies here if we try to execute cd-rom
 //	while(1);
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();
@@ -211,7 +211,10 @@ void SysCloseLibrary(void *lib) {
 //	dlclose(lib);
 }
 
+int framesdone = 0;
 void SysUpdate() {
+	printf("Executed %i frames\n",framesdone);
+	framesdone++;
 //	PADhandleKey(PAD1_keypressed());
 //	PADhandleKey(PAD2_keypressed());
 }

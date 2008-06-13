@@ -115,6 +115,15 @@ void SPU_d_writeDMA(unsigned short val) {
 }
 
 void SPU_d_playADPCMchannel(xa_decode_t *xap) {
+/*	typedef struct {
+	int				freq;
+	int				nbits;
+	int				stereo;
+	int				nsamples;
+	ADPCM_Decode_t	left, right;
+	short			pcm[16384];
+} xa_decode_t;*/
+	//play data from xap->ADPCM_Decode_t
 }
 // Old Interface
 
