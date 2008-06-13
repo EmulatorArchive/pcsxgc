@@ -77,7 +77,7 @@ u32 *psxRecLUT;
 
 #define OFFSET(X,Y) ((u32)(Y)-(u32)(X))
 
-#define RECMEM_SIZE		(12*1024*1024)
+#define RECMEM_SIZE		(4*1024*1024)
 
 static char *recMem;	/* the recompiled blocks will be here */
 static char *recRAM;	/* and the ptr to the blocks here */

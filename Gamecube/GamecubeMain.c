@@ -105,15 +105,15 @@ int main(int argc, char *argv[]) {
 	
 	/* Configure pcsx */
 	memset(&Config, 0, sizeof(PcsxConfig));
-	strcpy(Config.Bios, "scph1001.bin"); // Use actual BIOS
-	strcpy(Config.BiosDir, "/PCSX/");
+	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
+	strcpy(Config.BiosDir, "PSXISOS/");
 	strcpy(Config.Net,"Disabled");
 
-//	Config.Cpu = 1;	//?
-	Config.Cpu = 0;
+	Config.Cpu = 1;	//?
+//	Config.Cpu = 0;
 //	Config.CdTiming = 0;	//no longer used
 	Config.PsxOut = 1;
-//	Config.HLE = 1;	//?
+	Config.HLE = 1;
     SysPrintf("start main()\r\n");
 
 	if (SysInit() == -1) 
@@ -132,11 +132,11 @@ int main(int argc, char *argv[]) {
     SysPrintf("CheckCdrom()\r\n");
 	CheckCdrom();
 	
-	while(1);
-    SysPrintf("Load()\r\n");
+
+//	SysPrintf("Load()\r\n");
 //	Load("/rd/pdx-dlcm.psx");
-	LoadCdrom();		//code dies here.
-	while(1);
+//	LoadCdrom();		//code dies here if we try to execute cd-rom
+//	while(1);
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();
 

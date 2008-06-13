@@ -138,14 +138,75 @@ unsigned char *CDR__getBuffer(void);
 	    { "CDRgetBuffer", \
 	      CDR__getBuffer} \
 	       } }
+		
 
+void SPU_d_playSample(unsigned char);		
+
+#define SPU_PLUGIN \
+	{ "SPU",      \
+	  27,         \
+	  { { "SPUinit",  \
+	      SPU_d_init }, \
+	    { "SPUshutdown",	\
+	      SPU_d_shutdown}, \
+	    { "SPUopen", \
+	      SPU_d_open}, \
+	    { "SPUclose", \
+	      SPU_d_close}, \
+	    { "SPUconfigure", \
+	      SPU_d_configure}, \
+	    { "SPUabout", \
+	      SPU_d_about}, \
+	    { "SPUtest", \
+	      SPU_d_test}, \
+	    { "SPUstartChannels1", \
+	      SPU_d_startChannels1}, \
+	    { "SPUstartChannels2", \
+	      SPU_d_startChannels2}, \
+	    { "SPUstopChannels1", \
+	      SPU_d_stopChannels1}, \
+	    { "SPUstopChannels2", \
+	      SPU_d_stopChannels2}, \
+	    { "SPUputOne", \
+	      SPU_d_putOne}, \
+	    { "SPUgetOne", \
+	      SPU_d_getOne}, \
+	    { "SPUsetAddr", \
+	      SPU_d_setAddr}, \
+	    { "SPUsetPitch", \
+	      SPU_d_setPitch}, \
+	    { "SPUsetVolumeL", \
+	      SPU_d_setVolumeL}, \
+	    { "SPUsetVolumeR", \
+	      SPU_d_setVolumeR}, \
+	    { "SPUwriteRegister", \
+	      SPU_d_writeRegister}, \
+	    { "SPUreadRegister", \
+	      SPU_d_readRegister}, \
+	    { "SPUwriteDMA", \
+	      SPU_d_writeDMA}, \
+	    { "SPUreadDMA", \
+	      SPU_d_readDMA}, \
+	    { "SPUwriteDMAMem", \
+	      SPU_d_writeDMA}, \
+	    { "SPUreadDMAMem", \
+	      SPU_d_readDMA}, \
+	    { "SPUplayADPCMchannel", \
+	      SPU_d_playADPCMchannel}, \
+	    { "SPUfreeze", \
+	      SPU_d_close}, \
+	    { "SPUregisterCallback", \
+	      SPU_d_close}, \
+	    { "SPUasync", \
+	      SPU_d_close} \
+	       } }
        
 	       
 #define PLUGIN_SLOT_0 EMPTY_PLUGIN
 #define PLUGIN_SLOT_1 PAD1_PLUGIN
 #define PLUGIN_SLOT_2 PAD2_PLUGIN
 #define PLUGIN_SLOT_3 CDR_PLUGIN
-#define PLUGIN_SLOT_4 EMPTY_PLUGIN
+#define PLUGIN_SLOT_4 SPU_PLUGIN
 #define PLUGIN_SLOT_5 EMPTY_PLUGIN
 #define PLUGIN_SLOT_6 EMPTY_PLUGIN
 #define PLUGIN_SLOT_7 EMPTY_PLUGIN

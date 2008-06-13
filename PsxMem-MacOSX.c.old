@@ -793,9 +793,9 @@ void psxMemWrite32(u32 mem, u32 value) {
 	u32 t;
 	
 //	if ((mem&0x1fffff) == 0x71E18 || value == 0x48088800) SysPrintf("t2fix!!\n");
-	t = mem - 0x1f800000;
-	if (t >> 16 == 0) {
-		if (t < 0x1000)
+	t = mem >> 16;
+	if (t == 0x1f80) {
+		if (mem < 0x1f801000)
 			psxHu32ref(mem) = SWAPu32(value);
 		else
 			psxHwWrite32(mem, value);
