@@ -82,6 +82,19 @@ long CDR__getTD(unsigned char , unsigned char *);
 long CDR__readTrack(unsigned char *);
 unsigned char *CDR__getBuffer(void);
 
+/* GPU */
+typedef long (* GPUopen)(unsigned long *, char *, char *);
+long GPU__open(void);  
+long GPU__init(void);
+long GPU__shutdown(void);
+long GPU__close(void);
+void GPU__writeStatus(unsigned long);
+void GPU__writeData(unsigned long);
+unsigned long GPU__readStatus(void);
+unsigned long GPU__readData(void);
+long GPU__dmaChain(unsigned long *,unsigned long);
+void GPU__updateLace(void);
+
 #define EMPTY_PLUGIN \
 	{ NULL,      \
 	  0,         \
@@ -138,9 +151,6 @@ unsigned char *CDR__getBuffer(void);
 	    { "CDRgetBuffer", \
 	      CDR__getBuffer} \
 	       } }
-		
-
-void SPU_d_playSample(unsigned char);		
 
 #define SPU_PLUGIN \
 	{ "SPU",      \
@@ -200,14 +210,38 @@ void SPU_d_playSample(unsigned char);
 	    { "SPUasync", \
 	      SPU_d_close} \
 	       } }
-       
+	       
+#define GPU_PLUGIN \
+	{ "GPU",      \
+	  10,         \
+	  { { "GPUinit",  \
+	      GPU__init }, \
+	    { "GPUshutdown",	\
+	      GPU__shutdown}, \
+	    { "GPUopen", \
+	      GPU__open}, \
+	    { "GPUclose", \
+	      GPU__close}, \
+	    { "GPUwriteStatus", \
+	      GPU__writeStatus}, \
+	    { "GPUwriteData", \
+	      GPU__writeData}, \
+	    { "GPUreadStatus", \
+	      GPU__readStatus}, \
+	    { "GPUreadData", \
+	      GPU__readData}, \
+	    { "GPUdmaChain", \
+	      GPU__dmaChain}, \
+	    { "GPUupdateLace", \
+	      GPU__updateLace} \
+	       } }
 	       
 #define PLUGIN_SLOT_0 EMPTY_PLUGIN
 #define PLUGIN_SLOT_1 PAD1_PLUGIN
 #define PLUGIN_SLOT_2 PAD2_PLUGIN
 #define PLUGIN_SLOT_3 CDR_PLUGIN
 #define PLUGIN_SLOT_4 SPU_PLUGIN
-#define PLUGIN_SLOT_5 EMPTY_PLUGIN
+#define PLUGIN_SLOT_5 GPU_PLUGIN
 #define PLUGIN_SLOT_6 EMPTY_PLUGIN
 #define PLUGIN_SLOT_7 EMPTY_PLUGIN
 

@@ -21,10 +21,6 @@
 #ifndef __PLUGIN_H__
 #define __PLUGIN_H__
 
-typedef long (* GPUopen)(unsigned long *, char *, char *);
-
-long GPU__open(void);          
-
 typedef long (* NETopen)(unsigned long *);
 
 #endif /* __PLUGIN_H__ */
