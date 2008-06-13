@@ -16,22 +16,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef _MSC_VER_
-#pragma warning(disable:4244)
-#pragma warning(disable:4761)
-#endif
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <sys/types.h>
-//#include <sys/mman.h>
-
-//#include <Carbon/Carbon.h>
 
 #include "PsxCommon.h"
 #include "ppc.h"
 #include "reguse.h"
-
+ 
 #define CPI_NUM 1
 #define CPI_DEN 1
 
@@ -195,7 +188,7 @@ static int PutHWRegSpecial(int which);
 static void recRecompile();
 static void recError();
 
-#pragma mark --- Generic register mapping ---
+/* --- Generic register mapping --- */
 
 static int GetFreeHWReg()
 {
@@ -250,11 +243,11 @@ static int GetFreeHWReg()
 	}*/
 	if (HWRegisters[index].usage & (HWUSAGE_RESERVED | HWUSAGE_HARDWIRED)) {
 		if (HWRegisters[index].usage & HWUSAGE_RESERVED) {
-			SysPrintf("Error! Trying to map a new register to a reserved register (r%i)", 
+			SysPrintf("Error! Trying to map a new register to a reserved register (r%i)\n", 
 						HWRegisters[index].code);
 		}
 		if (HWRegisters[index].usage & HWUSAGE_HARDWIRED) {
-			SysPrintf("Error! Trying to map a new register to a hardwired register (r%i)", 
+			SysPrintf("Error! Trying to map a new register to a hardwired register (r%i)\n", 
 						HWRegisters[index].code);
 		}
 	}
@@ -297,7 +290,7 @@ static void DisposeHWReg(int index)
 	
 	HWRegisters[index].usage &= ~(HWUSAGE_READ | HWUSAGE_WRITE);
 	if (HWRegisters[index].usage == HWUSAGE_NONE) {
-		SysPrintf("Error! not correctly disposing register (r%i)", HWRegisters[index].code);
+		SysPrintf("Error! not correctly disposing register (r%i)\n", HWRegisters[index].code);
 	}
 	
 	FlushHWReg(index);
@@ -333,7 +326,7 @@ static void InvalidateCPURegs()
 	FlushCPURegRange(0,12);
 }
 
-#pragma mark --- Mapping utility functions ---
+/* --- Mapping utility functions --- */
 
 static void MoveHWRegToCPUReg(int cpureg, int hwreg)
 {
@@ -384,7 +377,7 @@ static int GetHWRegFromCPUReg(int cpureg)
 		}
 	}
 	
-	SysPrintf("Error! Register location failure (r%i)", cpureg);
+	SysPrintf("Error! Register location failure (r%i)\n", cpureg);
 	return 0;
 }
 
@@ -437,7 +430,7 @@ static void RestoreRegisterState()
 	
 }
 
-#pragma mark --- Psx register mapping ---
+/* --- Psx register mapping --- */
 
 static void MapPsxReg32(int reg)
 {
@@ -446,7 +439,7 @@ static void MapPsxReg32(int reg)
     HWRegisters[hwreg].private = reg;
     
     if (iRegs[reg].reg != -1) {
-        SysPrintf("error: double mapped psx register");
+        SysPrintf("error: double mapped psx register\n");
     }
     
     iRegs[reg].reg = hwreg;
@@ -458,7 +451,7 @@ static void FlushPsxReg32(int hwreg)
 	int reg = HWRegisters[hwreg].private;
 	
 	if (iRegs[reg].reg == -1) {
-		SysPrintf("error: flushing unmapped psx register");
+		SysPrintf("error: flushing unmapped psx register\n");
 	}
 	
 	if (HWRegisters[hwreg].usage & HWUSAGE_WRITE) {
@@ -543,7 +536,7 @@ static int PutHWReg32(int reg)
 	return UpdateHWRegUsage(iRegs[reg].reg, usage);
 }
 
-#pragma mark --- Special register mapping ---
+/* --- Special register mapping --- */
 
 static int GetSpecialIndexFromHWRegs(int which)
 {
@@ -718,7 +711,7 @@ static int PutHWRegSpecial(int which)
 	return UpdateHWRegUsage(index, usage);
 }
 
-#pragma mark --- ---
+/* --- --- */
 
 static void MapConst(int reg, u32 _const) {
 	if (reg == 0)
@@ -1050,7 +1043,7 @@ static void iBranch(u32 branchPC, int savectx) {
 static void iDumpRegs() {
 	int i, j;
 
-	printf("%lx %lx\n", psxRegs.pc, psxCurrentCycle);
+	printf("%x %x\n", psxRegs.pc, psxCurrentCycle);
 	for (i=0; i<4; i++) {
 		for (j=0; j<8; j++)
 			printf("%lx ", psxRegs.GPR.r[j*i]);
@@ -1142,7 +1135,7 @@ static int allocMem() {
 	recROM = (char*) calloc(1, 0x080000);
 	if (recRAM == NULL || recROM == NULL || recMem == NULL/*(void *)-1*/ || psxRecLUT == NULL) {
                 freeMem(1);
-		SysMessage("Error allocating memory"); return -1;
+		SysPrintf("Error allocating memory\n"); return -1;
 	}
 
 	for (i=0; i<0x80; i++) psxRecLUT[i + 0x0000] = (u32)&recRAM[(i & 0x1f) << 16];
@@ -1179,7 +1172,7 @@ static void recShutdown() {
 }
 
 static void recError() {
-	SysMessage("Unrecoverable error while running recompiler\n");
+	SysPrintf("Unrecoverable error while running recompiler\n");
 	
 	SysReset();
 	//ClosePlugins();
@@ -1213,7 +1206,7 @@ static void recClear(u32 Addr, u32 Size) {
 }
 
 static void recNULL() {
-//	SysMessage("recUNK: %8.8x\n", psxRegs.code);
+//	SysPrintf("recUNK: %8.8x\n", psxRegs.code);
 }
 
 /*********************************************************
@@ -1245,7 +1238,7 @@ static void recBASIC() {
 
 //end of Tables opcodes...
 
-#pragma mark - Arithmetic with immediate operand -
+/* - Arithmetic with immediate operand - */
 /*********************************************************
 * Arithmetic with immediate operand                      *
 * Format:  OP rt, rs, immediate                          *
@@ -1373,7 +1366,7 @@ static void recLUI()  {
 //#endif
 //End of Load Higher .....
 
-#pragma mark - Register arithmetic -
+/* - Register arithmetic - */
 /*********************************************************
 * Register arithmetic                                    *
 * Format:  OP rd, rs, rt                                 *
@@ -1578,7 +1571,7 @@ static void recSLTU() {
 #endif
 //End of * Register arithmetic
 
-#pragma mark - mult/div & Register trap logic -
+/* - mult/div & Register trap logic - */
 /*********************************************************
 * Register mult/div & Register trap logic                *
 * Format:  OP rs, rt                                     *
@@ -1834,7 +1827,7 @@ static void recDIVU() {
 #endif
 //End of * Register mult/div & Register trap logic  
 
-#pragma mark - memory access -
+/* - memory access - */
 
 #if 0
 REC_FUNC(LB);
@@ -2852,7 +2845,7 @@ static void recSRA() {
 }
 #endif
 
-#pragma mark - shift ops -
+/* - shift ops - */
 #if 0
 /*REC_FUNC(SLLV);
 REC_FUNC(SRLV);
@@ -2970,7 +2963,7 @@ static void recMTLO() {
 }
 #endif
 
-#pragma mark - branch ops -
+/* - branch ops - */
 #if 0
 /*REC_BRANCH(J);
 REC_BRANCH(JR);

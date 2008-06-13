@@ -33,8 +33,8 @@
 #define SWAPu16(v) SWAP16((u16)(v))
 #define SWAPs16(v) (s16)SWAP16((s16)(v))
 
-#define SWAP16(x) ((x)>>8 & 0xff | (x)<<8 & 0xff00)
-#define SWAP32(x) ((x)>>24 & 0xfful | (x)>>8 & 0xff00ul | (x)<<8 & 0xff0000ul | (x)<<24 & 0xff000000ul)
+#define SWAP16(x) ((((x)>>8) & 0xff) | (((x)<<8) & 0xff00))
+#define SWAP32(x) ((((x)>>24) & 0xfful) | (((x)>>8) & 0xff00ul) | (((x)<<8) & 0xff0000ul) | (((x)<<24) & 0xff000000ul))
 
 #define SWAP16p(ptr) ({u16 __ret, *__ptr=(ptr); __asm__ ("lhbrx %0, 0, %1" : "=r" (__ret) : "r" (__ptr)); __ret;})
 #define SWAP32p(ptr) ({u32 __ret, *__ptr=(ptr); __asm__ ("lwbrx %0, 0, %1" : "=r" (__ret) : "r" (__ptr)); __ret;})

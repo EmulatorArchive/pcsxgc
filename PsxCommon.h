@@ -173,5 +173,15 @@ extern int NetOpened;
 #include "Misc.h"
 #include "Debug.h"
 #include "Gte.h"
+extern void SysPrintf(char *fmt, ...);
+extern void SysReset();
+extern void *SysLoadLibrary(char *lib);
+extern void *SysLoadSym(void *lib, char *sym);
+extern char *SysLibError();
+extern void SysCloseLibrary(void *lib);
+extern void SysUpdate();
+extern void SysRunGui();
+extern void SysClose();
+extern int SysInit();
 
 #endif /* __PSXCOMMON_H__ */
