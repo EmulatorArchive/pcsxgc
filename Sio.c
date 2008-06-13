@@ -326,7 +326,7 @@ void LoadMcd(int mcd, char *str) {
 	if (mcd == 1) data = Mcd1Data;
 	if (mcd == 2) data = Mcd2Data;
 
-	if (*str == 0) sprintf(str, "memcards/Mcd00%d.mcr", mcd);
+	if (*str == 0) sprintf(str, "Mcd00%d.mcr", mcd);
 	f = fopen(str, "rb");
 	if (f == NULL) {
 		CreateMcd(str);

@@ -78,12 +78,12 @@ void openBin(const char* filename)
 	
 	//if (CD.cd == NULL) CD.cd = -1;
 		
-	/*if (CD.cd == 0)
+	if (CD.cd == 0)
 	{
 		SysPrintf("Error opening cd\r\n");
-		exit(0);
+		return;
 	}
-	*/
+	
 	end = fseek(CD.cd, 0, SEEK_END);
 	end = ftell(CD.cd);
 	size = end;
@@ -255,8 +255,8 @@ long CDR__open(void)
 
 long CDR__init(void) {
 	SysPrintf("start CDR_init()\r\n");
-	strcpy(CDConfiguration.dn, "/cd");
-	strcpy(CDConfiguration.fn, "psxcd.bin");
+	strcpy(CDConfiguration.dn, "PSXISOS");
+	strcpy(CDConfiguration.fn, "GAME.ISO");
 	SysPrintf("end CDR_init()\r\n");
 	return 0;
 }

@@ -24,7 +24,9 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <fat.h>
 #include "PsxCommon.h"
+#include "PlugCD.h"
 
 /* function prototypes */
 int SysInit();
@@ -98,6 +100,7 @@ int main(int argc, char *argv[]) {
 	int i;
 */
 	Initialise();
+	fatInitDefault();
     draw_splash();
 	
 	/* Configure pcsx */
@@ -105,30 +108,35 @@ int main(int argc, char *argv[]) {
 	strcpy(Config.Bios, "scph1001.bin"); // Use actual BIOS
 	strcpy(Config.BiosDir, "/PCSX/");
 	strcpy(Config.Net,"Disabled");
+
 //	Config.Cpu = 1;	//?
 	Config.Cpu = 0;
 //	Config.CdTiming = 0;	//no longer used
 	Config.PsxOut = 1;
 //	Config.HLE = 1;	//?
-	
     SysPrintf("start main()\r\n");
 
-	if (SysInit() == -1) return 1;
+	if (SysInit() == -1) 
+	{
+		printf("SysInit() Error!\n");
+		while(1);
+	}
 
 	/* Start gui */
 //	menu_start();
-	LoadPlugins();
-	while(1);
-	//OpenPlugins();
-	SysReset();
 
+	
+	SysReset();
+	
+	CDR_open();
     SysPrintf("CheckCdrom()\r\n");
 	CheckCdrom();
 	
+	while(1);
     SysPrintf("Load()\r\n");
 //	Load("/rd/pdx-dlcm.psx");
-	LoadCdrom();
-	
+	LoadCdrom();		//code dies here.
+	while(1);
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();
 
@@ -144,7 +152,7 @@ int SysInit() {
     SysPrintf("LoadPlugins()\r\n");
 	LoadPlugins();
     SysPrintf("LoadMcds()\r\n");
-//	LoadMcds(Config.Mcd1, Config.Mcd2);
+	LoadMcds(Config.Mcd1, Config.Mcd2);
 
 	SysPrintf("end SysInit()\r\n");
 	return 0;
