@@ -76,6 +76,11 @@ BOOL   bInitCap = TRUE;
 float  fps_skip = 0;
 float  fps_cur  = 0;
 
+#ifdef __GX__
+// prototype
+unsigned int usleep(unsigned int us);
+#endif //__GX__
+
 ////////////////////////////////////////////////////////////////////////
 
 #define MAXLACE 16

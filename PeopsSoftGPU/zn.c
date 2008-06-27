@@ -132,7 +132,7 @@ long CALLBACK ZN_GPUopen(void * vcfg)
  pConfigFile=(char *)cfg->CfgFile;                     // only used in this open, so we can store this temp pointer here without danger... don't access it later, though!
  lret=GPUopen((HWND)cfg->hWnd);
 #else
- lret=GPUopen(&cfg->hWnd,cfg->GameName,cfg->CfgFile);
+ lret=GPUopen((unsigned long*) &cfg->hWnd,(char*) cfg->GameName,(char*) cfg->CfgFile);
 #endif
 
 /*
