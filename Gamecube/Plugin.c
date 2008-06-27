@@ -179,7 +179,7 @@ int _OpenPlugins() {
 
 	GPU_clearDynarec(clearDynarec);
 
-/*	ret = CDR_open();
+	ret = CDR_open();
 	if (ret < 0) { SysPrintf("Error Opening CDR Plugin\n"); return -1; }
 	ret = SPU_open();
 	if (ret < 0) { SysPrintf("Error Opening SPU Plugin\n"); return -1; }
@@ -190,7 +190,7 @@ int _OpenPlugins() {
 	if (ret < 0) { SysPrintf("Error Opening PAD1 Plugin\n"); return -1; }
 	ret = PAD2_open(&gpuDisp);
 	if (ret < 0) { SysPrintf("Error Opening PAD2 Plugin\n"); return -1; }
-*/
+
 	if (Config.UseNet && NetOpened == 0) {
 		netInfo info;
 		char path[256];

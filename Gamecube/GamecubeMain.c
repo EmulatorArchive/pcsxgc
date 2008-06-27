@@ -150,11 +150,7 @@ int main(int argc, char *argv[]) {
 		printf("SysInit() Error!\n");
 		while(1);
 	}
-
-	//This should be done in OpenPlugins(), but that function is not called...?
-	i = GPU_open(&gpuDisp, "PCSX", NULL);
-	if (i < 0) 
-		SysPrintf("Error Opening GPU Plugin\n");
+	OpenPlugins();
 
 	/* Start gui */
 //	menu_start();
@@ -170,7 +166,7 @@ int main(int argc, char *argv[]) {
 //	SysPrintf("Load()\r\n");
 //	Load("/rd/pdx-dlcm.psx");
 	LoadCdrom();		//code dies here if we try to execute cd-rom
-//	while(1);
+
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();
 
@@ -248,8 +244,8 @@ void SysCloseLibrary(void *lib) {
 
 int framesdone = 0;
 void SysUpdate() {
-	printf("Executed %i frames\n",framesdone);
-	framesdone++;
+	//printf("Executed %i frames\n",framesdone);
+	//framesdone++;
 //	PADhandleKey(PAD1_keypressed());
 //	PADhandleKey(PAD2_keypressed());
 }
