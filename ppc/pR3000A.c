@@ -1051,7 +1051,7 @@ static void iDumpRegs() {
 	}
 }
 
-void iDumpBlock(char *ptr) {
+void iDumpBlock(char *ptr) {/*
 	FILE *f;
 	u32 i;
 	
@@ -1068,7 +1068,7 @@ void iDumpBlock(char *ptr) {
 	fwrite(ptr, 1, (u32)ppcPtr - (u32)ptr, f);
 	fclose(f);
 	//system("ndisasmw -u dump1");
-	fflush(stdout);
+	fflush(stdout);*/
 }
 
 #define REC_FUNC(f) \

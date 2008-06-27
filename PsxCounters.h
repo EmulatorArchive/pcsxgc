@@ -28,7 +28,7 @@ extern psxCounter psxCounters[5];
 
 //extern unsigned long psxNextCounter;
 #define psxNextCounter timed_interrupts[0].when
-
+void psxRcntSet();
 void psxRcntInit();
 void psxRcntUpdate();
 void psxRcntWcount(unsigned long index, unsigned long value);

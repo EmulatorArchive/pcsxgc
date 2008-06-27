@@ -93,7 +93,7 @@ static void Initialise (void){
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
 //  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
 
-  printf("Initialize - whichfb = %d; xfb = %x, %x\n",whichfb,xfb[0],xfb[1]);
+  printf("Initialize - whichfb = %d; xfb = %x, %x\n",(u32)whichfb,(u32)xfb[0],(u32)xfb[1]);
 
 }
 
@@ -125,9 +125,7 @@ int main(int argc, char *argv[]) {
 	int loadst = 0;
 	int i;
 */
-	int i;
-	unsigned long gpuDisp;	//temporarily here
-	
+
 	Initialise();
 	fatInitDefault();
     draw_splash();

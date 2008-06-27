@@ -3,11 +3,18 @@
 	
 	TODO: Fix Missing CDDA support(?)
 */
-
+#include <gccore.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <string.h>
 #include <gccore.h>
 #include "plugins.h"
 #include "PlugCD.h"
-
+#include "PsxCommon.h"
 // gets track 
 long getTN(unsigned char* buffer)
 {
@@ -74,7 +81,7 @@ void openBin(const char* filename)
 	
 	CD.cd = fopen(filename, "rb");
 	
-	printf("CD.cd = %08x\n",CD.cd);
+//	printf("CD.cd = %08x\n",CD.cd);
 	
 	//if (CD.cd == NULL) CD.cd = -1;
 		
@@ -87,7 +94,7 @@ void openBin(const char* filename)
 	end = fseek(CD.cd, 0, SEEK_END);
 	end = ftell(CD.cd);
 	size = end;
-	printf("size of CD in MB = %d\r\n",size/1048576);
+	SysPrintf("size of CD in MB = %d\r\n",size/1048576);
 	
 	rc = fseek(CD.cd, 0, SEEK_SET);
 	blocks = size / 2352;

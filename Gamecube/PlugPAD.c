@@ -6,9 +6,17 @@
 
 #include <gccore.h>
 #include <stdint.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <string.h>
 #include <sys/types.h>
 #include <ogc/pad.h>
 #include "plugins.h"
+#include "PsxCommon.h"
 
 long  PadFlags = 0;
 
@@ -44,26 +52,26 @@ long PAD__close(void) {
 long PAD__readPort1(PadDataS* pad) {
 //	SysPrintf("start PAD1_readPort()\r\n");
 	int b = PAD_ButtonsHeld(0);
-	uint16_t pad_status = 0;	//bit pointless why is this done this way? :\
+	uint16_t pad_status = 0xFFFF;	//bit pointless why is this done this way?
 	 
 	if (!(b & PAD_BUTTON_START))
-		pad_status &= (1<<3);
+		pad_status &= ~(1<<3);
 	if (!(b & PAD_BUTTON_A))
-		pad_status &= (1<<14);
+		pad_status &= ~(1<<14);
 	if (!(b & PAD_BUTTON_B))
-		pad_status &= (1<<13);
+		pad_status &= ~(1<<13);
 	if (!(b & PAD_BUTTON_X))
-		pad_status &= (1<<15);
+		pad_status &= ~(1<<15);
 	if (!(b & PAD_BUTTON_Y))
-		pad_status &= (1<<12);
+		pad_status &= ~(1<<12);
 	if (!(b & PAD_BUTTON_UP))
-		pad_status &= (1<<4);
+		pad_status &= ~(1<<4);
 	if (!(b & PAD_BUTTON_DOWN))
-		pad_status &= (1<<6);
+		pad_status &= ~(1<<6);
 	if (!(b & PAD_BUTTON_LEFT))
-		pad_status &= (1<<7);
+		pad_status &= ~(1<<7);
 	if (!(b & PAD_BUTTON_RIGHT))
-		pad_status &= (1<<5);
+		pad_status &= ~(1<<5);
 			
 	pad->buttonStatus = pad_status;
 	pad->controllerType = 4; // standard
@@ -74,26 +82,26 @@ long PAD__readPort1(PadDataS* pad) {
 
 long PAD__readPort2(PadDataS* pad) {
 	int b = PAD_ButtonsHeld(1);
-	uint16_t pad_status = 0;	//bit pointless why is this done this way? :\
+	uint16_t pad_status = 0xFFFF;	//bit pointless why is this done this way?
 	 
 	if (!(b & PAD_BUTTON_START))
-		pad_status &= (1<<3);
+		pad_status &= ~(1<<3);
 	if (!(b & PAD_BUTTON_A))
-		pad_status &= (1<<14);
+		pad_status &= ~(1<<14);
 	if (!(b & PAD_BUTTON_B))
-		pad_status &= (1<<13);
+		pad_status &= ~(1<<13);
 	if (!(b & PAD_BUTTON_X))
-		pad_status &= (1<<15);
+		pad_status &= ~(1<<15);
 	if (!(b & PAD_BUTTON_Y))
-		pad_status &= (1<<12);
+		pad_status &= ~(1<<12);
 	if (!(b & PAD_BUTTON_UP))
-		pad_status &= (1<<4);
+		pad_status &= ~(1<<4);
 	if (!(b & PAD_BUTTON_DOWN))
-		pad_status &= (1<<6);
+		pad_status &= ~(1<<6);
 	if (!(b & PAD_BUTTON_LEFT))
-		pad_status &= (1<<7);
+		pad_status &= ~(1<<7);
 	if (!(b & PAD_BUTTON_RIGHT))
-		pad_status &= (1<<5);
+		pad_status &= ~(1<<5);
 			
 	pad->buttonStatus = pad_status;
 	pad->controllerType = 4; // standard

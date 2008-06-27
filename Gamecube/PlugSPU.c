@@ -7,8 +7,14 @@
  *
  */
 #include <gccore.h>
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <string.h>
+#include "PsxCommon.h"
 
 #include "plugins.h"
 
@@ -16,9 +22,8 @@
 
 #include "PSEmu_Plugin_Defs.h"
 #include "Decode_XA.h"
-
-static char *LibName = "LinuzAppz SpuNull Driver";
 /*
+static char *LibName = "LinuzAppz SpuNull Driver";
 const unsigned char version = 1; // PSEmu 1.x library
 const unsigned char revision = 1;
 const unsigned char build = 0;

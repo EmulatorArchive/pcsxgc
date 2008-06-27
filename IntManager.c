@@ -21,7 +21,7 @@
 #include <string.h>
 
 #include "PsxCommon.h"
-
+#include "PsxCounters.h"
 //#define SAME_CYCLE_MODE
 
 //#define INT_LOG(STR, ...) {fprintf(logfile, STR, ## __VA_ARGS__); fflush(logfile);}
@@ -209,7 +209,7 @@ static int_handler _psx_int_handler(unsigned long which)
 	return NULL;
 }
 
-static void _install_psx_int_handler()
+void _install_psx_int_handler()
 {
 	int i;
 	
