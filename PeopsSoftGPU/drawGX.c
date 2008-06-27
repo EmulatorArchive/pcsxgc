@@ -327,7 +327,7 @@ void GX_Flip(int width, int height, u8 * buffer, int pitch)
 	long long int *src2 = (long long int *) (buffer + pitch);
 	long long int *src3 = (long long int *) (buffer + (pitch * 2));
 	long long int *src4 = (long long int *) (buffer + (pitch * 3));
-	int rowpitch = (pitch >> 3) * 3;
+	int rowpitch = (pitch >> 3) * 3 + ((pitch >> 3) - (width >> 2));
 	int rowadjust = ( pitch % 8 ) * 4;
 	char *ra = NULL;
 
