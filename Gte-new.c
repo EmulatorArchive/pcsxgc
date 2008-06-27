@@ -67,7 +67,7 @@
 #pragma warning(disable:4761)
 #endif
 
-#ifdef __MACOSX__
+#ifdef __GAMECUBE__ //__MACOSX__
 #define XOR1 1
 #define XOR3 3
 #else
