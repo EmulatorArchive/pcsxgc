@@ -88,7 +88,7 @@ void DoBufferSwap(void)                                // SWAP BUFFERS
 */
 
 //	For now stretch only using GX
-	printf("DoBufferSwap\n");
+//	printf("DoBufferSwap\n");
 
 	if(!Xpixels)
 	{
@@ -125,7 +125,7 @@ void DoBufferSwap(void)                                // SWAP BUFFERS
 //	if(XPimage) DisplayPic();
 
 	GX_Flip(iDX, iDY,(unsigned char *) Xpixels, iResX_Max*2);
-//	GX_Flip(1024, 1024,(unsigned char *) psxVuw, 1024*2);
+//	GX_Flip(1024, iGPUHeight,(unsigned char *) psxVuw, 1024*2);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -182,8 +182,8 @@ unsigned long ulInitDisplay(void)
 	memset(Xpixels,0,iResX_Max*iResY_Max*4);
 //	GXtexture = memalign(32,iResX_Max*iResY_Max*4);
 //	memset(GXtexture,0,iResX_Max*iResY_Max*4);
-	GXtexture = memalign(32,1024*1024*2);	// Temporarily make this large enough to fit all of vmem
-	memset(GXtexture,0,1024*1024*2);
+	GXtexture = memalign(32,1024*iGPUHeight*2);	// Temporarily make this large enough to fit all of vmem
+	memset(GXtexture,0,1024*iGPUHeight*2);
 
 	return (unsigned long)Xpixels;		//This isn't right, but didn't want to return 0..
 }
@@ -327,7 +327,7 @@ void GX_Flip(int width, int height, u8 * buffer, int pitch)
 	long long int *src2 = (long long int *) (buffer + pitch);
 	long long int *src3 = (long long int *) (buffer + (pitch * 2));
 	long long int *src4 = (long long int *) (buffer + (pitch * 3));
-	int rowpitch = (pitch >> 3) * 3 + ((pitch >> 3) - (width >> 2));
+	int rowpitch = (pitch >> 3) * 4  - (width >> 2);
 	int rowadjust = ( pitch % 8 ) * 4;
 	char *ra = NULL;
 
@@ -339,7 +339,8 @@ void GX_Flip(int width, int height, u8 * buffer, int pitch)
 	{ //adjust texture conversion
 		oldwidth = width;
 		oldheight = height;
-		memset(GXtexture,0,iResX_Max*iResY_Max*2);
+//		memset(GXtexture,0,iResX_Max*iResY_Max*2);
+		memset(GXtexture,0,1024*iGPUHeight*2);
 		GX_InitTexObj(&GXtexobj, GXtexture, width, height, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	}
 /*

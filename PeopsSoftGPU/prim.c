@@ -136,7 +136,7 @@ __inline unsigned short BGR24to16 (unsigned long BGR)
 __inline void UpdateGlobalTP(unsigned short gdata)
 {
  GlobalTextAddrX = (gdata << 6) & 0x3c0;               // texture addr
-
+#ifndef __GX__ //The iGPUHeight is set to 512.
  if(iGPUHeight==1024)
   {
    if(dwGPUVersion==2)
@@ -160,6 +160,9 @@ __inline void UpdateGlobalTP(unsigned short gdata)
     }
   }
  else GlobalTextAddrY = (gdata << 4) & 0x100;
+#else //!__GX__
+ GlobalTextAddrY = (gdata << 4) & 0x100;
+#endif //__GX__
 
  usMirror=gdata&0x3000;
 
