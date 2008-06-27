@@ -30,6 +30,7 @@
 // GENERIC FUNCS //////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 
+#ifndef __GX__
 HINSTANCE hInst=NULL;
 
 BOOL APIENTRY DllMain(HANDLE hModule,                  // DLL INIT
@@ -39,4 +40,4 @@ BOOL APIENTRY DllMain(HANDLE hModule,                  // DLL INIT
  hInst=(HINSTANCE)hModule;
  return TRUE;                                          // very quick :)
 }
-
+#endif //!__GX__

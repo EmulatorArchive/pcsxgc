@@ -43,6 +43,11 @@
 
 #define _IN_FPS
 
+#ifdef _DARWIN
+//#include <Carbon/Carbon.h>
+#include <mach/mach_time.h>
+#endif
+
 #include "externals.h"
 #include "fps.h"
 #include "gpu.h"
@@ -53,8 +58,6 @@
 
 #ifdef _WINDOWS
 LARGE_INTEGER CPUFrequency, PerformanceCounter;
-#else
-#include <unistd.h>
 #endif
 
 float          fFrameRateHz=0;
@@ -657,13 +660,46 @@ void InitFPS(void)
 // LINUX VERSION
 ////////////////////////////////////////////////////////////////////////
 
+#ifdef _DARWIN
+#define TIMEBASE timebase
+
+static unsigned long timebase; 
+static int shift_amount; 
+
+void initTime()
+{
+ mach_timebase_info_data_t tb;
+ mach_timebase_info(&tb);
+ 
+ float timescale = ((float)tb.numer/(float)tb.denom);
+ timescale /= 10000.0;
+ 
+ shift_amount = (int)log2(timescale);
+ timebase = (unsigned long)(100000.0 / (timescale / pow(2.0, (float)shift_amount)));
+}
+#else
+void initTime(){}
 #define TIMEBASE 100000
+#endif
 
 unsigned long timeGetTime()
 {
+#ifndef _DARWIN
  struct timeval tv;
  gettimeofday(&tv, 0);                                 // well, maybe there are better ways
  return tv.tv_sec * 100000 + tv.tv_usec/10;            // to do that, but at least it works
+#else
+ unsigned long long time = mach_absolute_time();
+
+ if (shift_amount <= 0)
+  return (unsigned long)(time >> -shift_amount);
+ else
+  return (unsigned long)(time << shift_amount);
+ 
+/* UnsignedWide microTickCount;
+ Microseconds(&microTickCount);
+ return ((unsigned long)*((long long *)&microTickCount))/10;*/
+#endif
 }
 
 void FrameCap (void)
@@ -691,11 +727,17 @@ void FrameCap (void)
       {
        curticks = timeGetTime();
        _ticks_since_last_update = curticks - lastticks;
+       
+		 int sleeptime = ((int)(TicksToWait-_ticks_since_last_update) * 10000) / (TIMEBASE / 100) - 1000;
+		 if (sleeptime > 0 && sleeptime < 500*1000)
+        usleep(sleeptime);
+
        if ((_ticks_since_last_update > TicksToWait) ||
            (curticks < lastticks))
         {
          Waiting = FALSE;
-         lastticks = curticks;
+         //lastticks = curticks;
+			lastticks += TicksToWait;
          TicksToWait = dwFrameRateTicks;
         }
       }
@@ -731,7 +773,9 @@ void FrameCapSSSPSX(void)                              // frame limit func SSSPS
 
 ////////////////////////////////////////////////////////////////////////
 
+//TODO: Merge the following function again.
 #define MAXSKIP 120
+//#define MAXSKIP 8
 
 void FrameSkip(void)
 {
@@ -740,7 +784,7 @@ void FrameSkip(void)
  static DWORD curticks, lastticks, _ticks_since_last_update;
 
  if(!dwLaceCnt) return;                                // important: if no updatelace happened, we ignore it completely
-
+ 
  if(iNumSkips)                                         // we are in skipping mode?
   {
    dwLastLace+=dwLaceCnt;                              // -> calc frame limit helper (number of laces)
@@ -750,6 +794,7 @@ void FrameSkip(void)
  else                                                  // ok, no additional skipping has to be done...
   {                                                    // we check now, if some limitation is needed, or a new skipping has to get started
    DWORD dwWaitTime;
+
 
    if(bInitCap || bSkipNextFrame)                      // first time or we skipped before?
     {
@@ -769,6 +814,11 @@ void FrameSkip(void)
             (60*dwFrameRateTicks))                     //    wrong waiting times
           _ticks_since_last_update=dwWaitTime;
 
+#ifdef _DARWIN
+		 int sleeptime = ((int)(dwWaitTime-_ticks_since_last_update) * 10000) / (TIMEBASE / 100) - 1000;
+		 if (sleeptime > 0 && sleeptime < 500*1000)
+        usleep(sleeptime);
+#endif
          while(_ticks_since_last_update<dwWaitTime)    // -> loop until we have reached the real psx time
           {                                            //    (that's the additional limitation, yup)
            curticks = timeGetTime();
@@ -824,7 +874,22 @@ void FrameSkip(void)
     {
      if(dwLaceCnt>MAXLACE)                             // -> security check
       _ticks_since_last_update=dwWaitTime;
+#ifdef _DARWIN
+		 int sleeptime = ((int)(dwWaitTime-_ticks_since_last_update) * 10000) / (TIMEBASE / 100) - 1000;
+		 if (sleeptime > 0 && sleeptime < 500*1000)
+        usleep(sleeptime);
 
+/*				unsigned long long next = lastticks;
+				next += (dwWaitTime >> 1) + (dwWaitTime >> 2);
+				
+				if (shift_amount <= 0) {
+					next <<= -shift_amount;
+				} else {
+					next >>= shift_amount;
+				}
+				next += (mach_absolute_time() >> (32 - shift_amount)) << (32 - shift_amount);
+				mach_wait_until(next);*/
+#endif
      while(_ticks_since_last_update<dwWaitTime)        // -> just do a waiting loop...
       {
        curticks = timeGetTime();
@@ -896,6 +961,11 @@ void PCFrameCap (void)
   {
    curticks = timeGetTime();
    _ticks_since_last_update = curticks - lastticks;
+
+   int sleeptime = ((int)(TicksToWait-_ticks_since_last_update) * 10000) / (TIMEBASE / 100) - 1000;
+   if (sleeptime > 0 && sleeptime < 500*1000)
+    usleep(sleeptime);
+
    if ((_ticks_since_last_update > TicksToWait) ||
        (curticks < lastticks))
     {

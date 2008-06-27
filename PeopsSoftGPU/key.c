@@ -245,6 +245,7 @@ char *keystate;
 
 
 #else
+#ifndef __GX__
  switch(keycode)
   {
    case VK_F5:
@@ -286,6 +287,7 @@ char *keystate;
      break;
     }
   }
+#endif //!__GX__
 #endif
 }
 
