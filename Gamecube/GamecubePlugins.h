@@ -82,7 +82,7 @@ long CDR__getTD(unsigned char , unsigned char *);
 long CDR__readTrack(unsigned char *);
 unsigned char *CDR__getBuffer(void);
 
-/* GPU */
+/* NULL GPU */
 typedef long (* GPUopen)(unsigned long *, char *, char *);
 long GPU__open(void);  
 long GPU__init(void);
@@ -94,6 +94,18 @@ unsigned long GPU__readStatus(void);
 unsigned long GPU__readData(void);
 long GPU__dmaChain(unsigned long *,unsigned long);
 void GPU__updateLace(void);
+
+/* PEOPS GPU */
+long PEOPS_GPUopen(unsigned long *, char *, char *); 
+long PEOPS_GPUinit(void);
+long PEOPS_GPUshutdown(void);
+long PEOPS_GPUclose(void);
+void PEOPS_GPUwriteStatus(unsigned long);
+void PEOPS_GPUwriteData(unsigned long);
+unsigned long PEOPS_GPUreadStatus(void);
+unsigned long PEOPS_GPUreadData(void);
+long PEOPS_GPUdmaChain(unsigned long *,unsigned long);
+void PEOPS_GPUupdateLace(void);
 
 #define EMPTY_PLUGIN \
 	{ NULL,      \
@@ -211,7 +223,7 @@ void GPU__updateLace(void);
 	      SPU_d_close} \
 	       } }
 	       
-#define GPU_PLUGIN \
+#define GPU_NULL_PLUGIN \
 	{ "GPU",      \
 	  10,         \
 	  { { "GPUinit",  \
@@ -235,13 +247,39 @@ void GPU__updateLace(void);
 	    { "GPUupdateLace", \
 	      GPU__updateLace} \
 	       } }
-	       
+
+#define GPU_PEOPS_PLUGIN \
+	{ "GPU",      \
+	  10,         \
+	  { { "GPUinit",  \
+	      PEOPS_GPUinit }, \
+	    { "GPUshutdown",	\
+	      PEOPS_GPUshutdown}, \
+	    { "GPUopen", \
+	      PEOPS_GPUopen}, \
+	    { "GPUclose", \
+	      PEOPS_GPUclose}, \
+	    { "GPUwriteStatus", \
+	      PEOPS_GPUwriteStatus}, \
+	    { "GPUwriteData", \
+	      PEOPS_GPUwriteData}, \
+	    { "GPUreadStatus", \
+	      PEOPS_GPUreadStatus}, \
+	    { "GPUreadData", \
+	      PEOPS_GPUreadData}, \
+	    { "GPUdmaChain", \
+	      PEOPS_GPUdmaChain}, \
+	    { "GPUupdateLace", \
+	      PEOPS_GPUupdateLace} \
+	       } }
+
 #define PLUGIN_SLOT_0 EMPTY_PLUGIN
 #define PLUGIN_SLOT_1 PAD1_PLUGIN
 #define PLUGIN_SLOT_2 PAD2_PLUGIN
 #define PLUGIN_SLOT_3 CDR_PLUGIN
 #define PLUGIN_SLOT_4 SPU_PLUGIN
-#define PLUGIN_SLOT_5 GPU_PLUGIN
+//#define PLUGIN_SLOT_5 GPU_NULL_PLUGIN
+#define PLUGIN_SLOT_5 GPU_PEOPS_PLUGIN
 #define PLUGIN_SLOT_6 EMPTY_PLUGIN
 #define PLUGIN_SLOT_7 EMPTY_PLUGIN
 

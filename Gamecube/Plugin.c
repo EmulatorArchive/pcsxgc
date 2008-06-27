@@ -24,7 +24,9 @@
 
 #include "plugins.h"
 #include "Spu.h"
+#ifndef __GX__
 #include "NoPic.h"
+#endif //!__GX__
 
 void OnFile_Exit();
 

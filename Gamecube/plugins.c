@@ -150,10 +150,12 @@ int LoadGPUplugin(char *GPUdll) {
 		GPU_configure = NULL;
 		SysPrintf ("Could Not Load GPU Plugin %s\n", GPUdll); return -1; 
 	}
+//	SysPrintf ("hGPUDriver = %d\n", hGPUDriver); 
 	drv = hGPUDriver;
 	LoadGpuSym1(init, "GPUinit");
 	LoadGpuSym1(shutdown, "GPUshutdown");
 	LoadGpuSym1(open, "GPUopen");
+//	SysPrintf ("GPU_open = %x\n",GPU_open);
 	LoadGpuSym1(close, "GPUclose");
 	LoadGpuSym1(readData, "GPUreadData");
 	LoadGpuSym0(readDataMem, "GPUreadDataMem");

@@ -17,6 +17,7 @@
  */
 
 #include <gccore.h>
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -41,11 +42,16 @@ void SysUpdate();
 void SysRunGui();
 void SysMessage(char *fmt, ...);
 
-static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
+u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
+int whichfb = 0;        /*** Frame buffer toggle ***/
 GXRModeObj *vmode;				/*** Graphics Mode Object ***/
+#define DEFAULT_FIFO_SIZE ( 256 * 1024 )
+//static u8 gp_fifo[DEFAULT_FIFO_SIZE] ATTRIBUTE_ALIGN(32); /*** 3D GX FIFO ***/
+
+
 void ScanPADSandReset() { PAD_ScanPads(); }
 static void Initialise (void){
-  static int whichfb = 0;        /*** Frame buffer toggle ***/
+  whichfb = 0;        /*** Frame buffer toggle ***/
   VIDEO_Init();
   PAD_Init();
   PAD_Reset(0xf0000000);
@@ -68,6 +74,26 @@ static void Initialise (void){
   VIDEO_WaitVSync ();        /*** Wait for VBL ***/
   if (vmode->viTVMode & VI_NON_INTERLACE)
     VIDEO_WaitVSync ();
+
+  // setup the fifo and then init GX
+  void *gp_fifo = NULL;
+  gp_fifo = MEM_K0_TO_K1 (memalign (32, DEFAULT_FIFO_SIZE));
+  memset (gp_fifo, 0, DEFAULT_FIFO_SIZE);
+ 
+  GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
+ 
+  // clears the bg to color and clears the z buffer
+  GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
+  // init viewport
+  GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
+  // Set the correct y scaling for efb->xfb copy operation
+  GX_SetDispCopyYScale ((f32) vmode->xfbHeight / (f32) vmode->efbHeight);
+  GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight); 
+  GX_SetCullMode (GX_CULL_NONE); 
+  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
+//  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
+
+  printf("Initialize - whichfb = %d; xfb = %x, %x\n",whichfb,xfb[0],xfb[1]);
 
 }
 
@@ -99,6 +125,9 @@ int main(int argc, char *argv[]) {
 	int loadst = 0;
 	int i;
 */
+	int i;
+	unsigned long gpuDisp;	//temporarily here
+	
 	Initialise();
 	fatInitDefault();
     draw_splash();
@@ -121,6 +150,11 @@ int main(int argc, char *argv[]) {
 		printf("SysInit() Error!\n");
 		while(1);
 	}
+
+	//This should be done in OpenPlugins(), but that function is not called...?
+	i = GPU_open(&gpuDisp, "PCSX", NULL);
+	if (i < 0) 
+		SysPrintf("Error Opening GPU Plugin\n");
 
 	/* Start gui */
 //	menu_start();
@@ -150,7 +184,8 @@ int SysInit() {
 	psxInit();
 
     SysPrintf("LoadPlugins()\r\n");
-	LoadPlugins();
+	if(LoadPlugins()==-1)
+		SysPrintf("ErrorLoadingPlugins()\r\n");
     SysPrintf("LoadMcds()\r\n");
 	LoadMcds(Config.Mcd1, Config.Mcd2);
 
