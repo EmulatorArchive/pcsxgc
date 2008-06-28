@@ -28,6 +28,7 @@
 #include <fat.h>
 #include "PsxCommon.h"
 #include "PlugCD.h"
+#include "DEBUG.h"
 
 /* function prototypes */
 int SysInit();
@@ -242,8 +243,10 @@ void SysCloseLibrary(void *lib) {
 
 int framesdone = 0;
 void SysUpdate() {
+	sprintf(txtbuffer,"Executed %i SysUpdates",framesdone);
+	DEBUG_print(txtbuffer,DBG_CORE1);
 	//printf("Executed %i frames\n",framesdone);
-	//framesdone++;
+	framesdone++;
 //	PADhandleKey(PAD1_keypressed());
 //	PADhandleKey(PAD2_keypressed());
 }

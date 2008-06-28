@@ -28,6 +28,8 @@
 #include "prim.h"
 #include "menu.h"
 #include "swap.h"
+#include "../Gamecube/font.h"
+#include "../Gamecube/DEBUG.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // misc globals
@@ -40,7 +42,7 @@ BOOL           bCheckMask=FALSE;
 unsigned short sSetMask=0;
 unsigned long  lSetMask=0;
 int            iDesktopCol=16;
-int            iShowFPS=0;
+int            iShowFPS=1;
 int            iWinSize;
 int            iUseScanLines=0;
 int            iUseNoStretchBlt=0;
@@ -51,28 +53,36 @@ PSXPoint_t     ptCursorPoint[8];
 unsigned short usCursorActive=0;
 
 //Some GX specific variables
-int		iResX_Max=640;
+//int	iResX_Max=640;	//Max FB Width
+int		iResX_Max=1024;	//Vmem width
 int		iResY_Max=512;
 char *	GXtexture;
-char *        Xpixels;
-char *        pCaptionText;
+char *	Xpixels;
+char *	pCaptionText;
 
 extern u32* xfb[2];	/*** Framebuffers ***/
 extern int whichfb;        /*** Frame buffer toggle ***/
 extern time_t tStart;
+extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH]; /*** DEBUG textbuffer ***/
 
 // prototypes
-void BlitScreenNS_GX(unsigned char * surf,long x,long y);
-void GX_Flip(int width, int height, u8 * buffer, int pitch);
+void BlitScreenNS_GX(unsigned char * surf,long x,long y, short dx, short dy);
+void GX_Flip(short width, short height, u8 * buffer, int pitch);
 
 
 void DoBufferSwap(void)                                // SWAP BUFFERS
 {                                                      // (we don't swap... we blit only)
 	static int iOldDX=0;
 	static int iOldDY=0;
+	long x = PSXDisplay.DisplayPosition.x;
+	long y = PSXDisplay.DisplayPosition.y;
 //	int iDX = PreviousPSXDisplay.Range.x1+PreviousPSXDisplay.Range.x0;
-	int iDX = PreviousPSXDisplay.Range.x1;
-	int iDY = PreviousPSXDisplay.DisplayMode.y;
+	short iDX = PreviousPSXDisplay.Range.x1;
+	short iDY = PreviousPSXDisplay.DisplayMode.y;
+
+	//Uncomment the following line to render all of vmem on screen.
+	//Note: may break when PSX is in true color mode...
+//	x = 0; y = 0; iDX = 1024; iDY = 512;
 
  // TODO: visual rumble
 
@@ -98,11 +108,11 @@ void DoBufferSwap(void)                                // SWAP BUFFERS
 
 	if(iOldDX!=iDX || iOldDY!=iDY)
 	{
-		memset(Xpixels,0,iResY_Max*iResX_Max*4);
+		memset(Xpixels,0,iResY_Max*iResX_Max*2);
 		iOldDX=iDX;iOldDY=iDY;
 	}
 
-	BlitScreenNS_GX((unsigned char *)Xpixels,PSXDisplay.DisplayPosition.x,PSXDisplay.DisplayPosition.y);
+	BlitScreenNS_GX((unsigned char *)Xpixels, x, y, iDX, iDY);
 
 // TODO: Show Gun cursor
 //	if(usCursorActive) ShowGunCursor(pBackBuffer,PreviousPSXDisplay.Range.x0+PreviousPSXDisplay.Range.x1);
@@ -133,7 +143,8 @@ void DoBufferSwap(void)                                // SWAP BUFFERS
 void DoClearScreenBuffer(void)                         // CLEAR DX BUFFER
 {
 	// clear the screen, and DON'T flush it
-	printf("DoClearScreenBuffer\n");
+	DEBUG_print("DoClearScreenBuffer",DBG_GPU1);
+//	printf("DoClearScreenBuffer\n");
 //	whichfb ^= 1;
 //	GX_CopyDisp(xfb[1], GX_TRUE);
 //	GX_Flush();
@@ -148,12 +159,31 @@ void DoClearScreenBuffer(void)                         // CLEAR DX BUFFER
 void DoClearFrontBuffer(void)                          // CLEAR DX BUFFER
 {
 	// clear the screen, and flush it
-	printf("DoClearFrontBuffer\n");
-//	whichfb ^= 1;
-//	GX_CopyDisp(xfb[1], GX_TRUE);
-//	GX_Flush();
-//	VIDEO_SetNextFramebuffer(xfb[0]);
-//	VIDEO_Flush();
+	DEBUG_print("DoClearFrontBuffer",DBG_GPU1);
+//	printf("DoClearFrontBuffer\n");
+
+	//Write menu/debug text on screen
+	GXColor fontColor = {150,255,150,255};
+	write_font_init_GX(fontColor);
+	if(ulKeybits&KEY_SHOWFPS)
+		write_font(10,35,szDispBuf, 1.0);
+
+	int i = 0;
+	DEBUG_update();
+	for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
+		write_font(10,(10*i+60),text[i], 0.5); 
+		
+   //reset swap table from GUI/DEBUG
+	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+
+	GX_DrawDone();
+
+	whichfb ^= 1;
+	GX_CopyDisp(xfb[0], GX_TRUE);
+	GX_DrawDone();
+	VIDEO_SetNextFramebuffer(xfb[0]);
+	VIDEO_Flush();
 //	VIDEO_WaitVSync();
 }
 
@@ -163,6 +193,8 @@ void DoClearFrontBuffer(void)                          // CLEAR DX BUFFER
 unsigned long ulInitDisplay(void)
 {
 	bUsingTWin=FALSE;
+
+	init_font();
 
 	InitMenu();
 
@@ -178,12 +210,10 @@ unsigned long ulInitDisplay(void)
 
 //	iColDepth=16;	//only needed by ShowGunCursor
 
-	Xpixels = memalign(32,iResX_Max*iResY_Max*4);
-	memset(Xpixels,0,iResX_Max*iResY_Max*4);
-//	GXtexture = memalign(32,iResX_Max*iResY_Max*4);
-//	memset(GXtexture,0,iResX_Max*iResY_Max*4);
-	GXtexture = memalign(32,1024*iGPUHeight*2);	// Temporarily make this large enough to fit all of vmem
-	memset(GXtexture,0,1024*iGPUHeight*2);
+	Xpixels = memalign(32,iResX_Max*iResY_Max*2);	//For now these are for 16bit color.
+	memset(Xpixels,0,iResX_Max*iResY_Max*2);
+	GXtexture = memalign(32,iResX_Max*iResY_Max*2);
+	memset(GXtexture,0,iResX_Max*iResY_Max*2);
 
 	return (unsigned long)Xpixels;		//This isn't right, but didn't want to return 0..
 }
@@ -228,12 +258,12 @@ void ShowTextGpuPic(void)
 
 ///////////////////////////////////////////////////////////////////////
 
-void BlitScreenNS_GX(unsigned char * surf,long x,long y)
+void BlitScreenNS_GX(unsigned char * surf,long x,long y, short dx, short dy)
 {
  unsigned long lu;
  unsigned short row,column;
- unsigned short dx=PreviousPSXDisplay.Range.x1;
- unsigned short dy=PreviousPSXDisplay.DisplayMode.y;
+// unsigned short dx=PreviousPSXDisplay.Range.x1;
+// unsigned short dy=PreviousPSXDisplay.DisplayMode.y;
  unsigned short LineOffset,SurfOffset;
  long lPitch=iResX_Max<<1;
 // long lPitch=iResX<<1;
@@ -313,7 +343,7 @@ void BlitScreenNS_GX(unsigned char * surf,long x,long y)
 
 ////////////////////////////////////////////////////////////////////////
 
-void GX_Flip(int width, int height, u8 * buffer, int pitch)
+void GX_Flip(short width, short height, u8 * buffer, int pitch)
 {
 	int h, w;
 //	int h, w, hh;
@@ -339,8 +369,7 @@ void GX_Flip(int width, int height, u8 * buffer, int pitch)
 	{ //adjust texture conversion
 		oldwidth = width;
 		oldheight = height;
-//		memset(GXtexture,0,iResX_Max*iResY_Max*2);
-		memset(GXtexture,0,1024*iGPUHeight*2);
+		memset(GXtexture,0,iResX_Max*iResY_Max*2);
 		GX_InitTexObj(&GXtexobj, GXtexture, width, height, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	}
 /*
@@ -435,6 +464,21 @@ void GX_Flip(int width, int height, u8 * buffer, int pitch)
 	  GX_Position2f32(-1.0,-1.0);
 	  GX_TexCoord2f32( 0.0, 1.0);
 	GX_End();
+
+	//Write menu/debug text on screen
+	GXColor fontColor = {150,255,150,255};
+	write_font_init_GX(fontColor);
+	if(ulKeybits&KEY_SHOWFPS)
+		write_font(10,35,szDispBuf, 1.0);
+
+	int i = 0;
+	DEBUG_update();
+	for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
+		write_font(10,(10*i+60),text[i], 0.5); 
+		
+   //reset swap table from GUI/DEBUG
+	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
 
 	GX_DrawDone();
 

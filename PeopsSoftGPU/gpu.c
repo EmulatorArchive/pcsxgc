@@ -617,6 +617,8 @@ long PEOPS_GPUopen(unsigned long * disp,char * CapText,char * CfgFile)
 
  ReadConfig();                                         // read registry
 
+ iShowFPS=1;	//Default config turns this off..
+
  InitFPS();
 
  bIsFirstFrame  = TRUE;                                // we have to init later
