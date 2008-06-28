@@ -190,7 +190,7 @@ long CALLBACK CDR__getStatus(struct CdrStat *stat) {
 }
 
 char* CALLBACK CDR__getDriveLetter(void) { return NULL; }
-unsigned char* CALLBACK CDR__getBufferSub(void) { return NULL; }
+//unsigned char* CALLBACK CDR__getBufferSub(void) { return NULL; }
 long CALLBACK CDR__configure(void) { return 0; }
 long CALLBACK CDR__test(void) { return 0; }
 void CALLBACK CDR__about(void) {}

@@ -81,6 +81,7 @@ long CDR__getTN(unsigned char *);
 long CDR__getTD(unsigned char , unsigned char *);
 long CDR__readTrack(unsigned char *);
 unsigned char *CDR__getBuffer(void);
+unsigned char *CDR__getBufferSub(void);
 
 /* NULL GPU */
 typedef long (* GPUopen)(unsigned long *, char *, char *);
@@ -145,7 +146,7 @@ void PEOPS_GPUupdateLace(void);
 
 #define CDR_PLUGIN \
 	{ "CDR",      \
-	  8,         \
+	  9,         \
 	  { { "CDRinit",  \
 	      CDR__init }, \
 	    { "CDRshutdown",	\
@@ -161,7 +162,9 @@ void PEOPS_GPUupdateLace(void);
 	    { "CDRreadTrack", \
 	      CDR__readTrack}, \
 	    { "CDRgetBuffer", \
-	      CDR__getBuffer} \
+	      CDR__getBuffer}, \
+	    { "CDRgetBufferSub", \
+	      CDR__getBufferSub} \
 	       } }
 
 #define SPU_PLUGIN \

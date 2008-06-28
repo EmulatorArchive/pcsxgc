@@ -24,11 +24,11 @@ long getTN(unsigned char* buffer)
 
  	if (-1 == numtracks)
  	{
-		//SysPrintf("end getTn()\r\n");
+		buffer[0]=buffer[1]=1;
     	return -1;
  	}
 
- 	buffer[0]=1;
+ 	buffer[0]=CD.tl[0].num;
  	buffer[1]=numtracks;
 
 	//printf("getnumtracks %d %d\n", (int)buffer[0], (int)buffer[1]);
@@ -40,7 +40,6 @@ long getTN(unsigned char* buffer)
 // otherwise return start in bcd time format
 long getTD(int track, unsigned char* buffer)
 {
-	// lasttrack just keeps track of which track TD was requested last (go fig)
 	// SysPrintf("start getTD()\r\n");
 
 	if (track > CD.numtracks)
@@ -49,17 +48,17 @@ long getTD(int track, unsigned char* buffer)
 		return -1;
 	}
 
-	if (track == 0)
-	{
-		buffer[0] = CD.tl[track].end[0];
-		buffer[1] = CD.tl[track].end[1];
-		buffer[2] = CD.tl[track].end[2];
-	}
+   if (track == 0)
+   {
+      buffer[0] = CD.tl[CD.numtracks-1].end[0];
+      buffer[1] = CD.tl[CD.numtracks-1].end[1];
+      buffer[2] = CD.tl[CD.numtracks-1].end[2];
+   }
 	else
 	{
-		buffer[0] = CD.tl[track].start[0];
-		buffer[1] = CD.tl[track].start[1];
-		buffer[2] = CD.tl[track].start[2];
+		buffer[0] = CD.tl[track-1].start[0];
+		buffer[1] = CD.tl[track-1].start[1];
+		buffer[2] = CD.tl[track-1].start[2];
 	}
 	// printf("getTD %2d %02d:%02d:%02d\n", track, (int)buffer[0],
 	//       (int)buffer[1], (int)buffer[2]);
@@ -76,14 +75,7 @@ long getTD(int track, unsigned char* buffer)
 void openBin(const char* filename)
 {
 	long end, size, blocks;
-	
-	//    SysPrintf("start openBin()\r\n");
-	
 	CD.cd = fopen(filename, "rb");
-	
-//	printf("CD.cd = %08x\n",CD.cd);
-	
-	//if (CD.cd == NULL) CD.cd = -1;
 		
 	if (CD.cd == 0)
 	{
@@ -118,13 +110,13 @@ void openBin(const char* filename)
 	
 	CD.numtracks = 1;
 	
-	// SysPrintf("end openBin()\r\n");
+	//CD.bufferSize = 0;
+    CD.bufferPos = 0x7FFFFFFF;
+  //  CD.status = 0x00;
 }
 
 void addBinTrackInfo()
-{
-	// SysPrintf("start addBinTrackInfo()\r\n");
-	
+{	
 	CD.tl = realloc(CD.tl, (CD.numtracks + 1) * sizeof(Track));
 	CD.tl[CD.numtracks].end[0] = CD.tl[0].end[0];
 	CD.tl[CD.numtracks].end[1] = CD.tl[0].end[1];
@@ -133,50 +125,37 @@ void addBinTrackInfo()
 	CD.tl[CD.numtracks].start[1] = CD.tl[0].start[1];
 	CD.tl[CD.numtracks].start[2] = CD.tl[0].start[2];
 
-	// SysPrintf("end addBinTrackInfo()\r\n");
 }
 
 // new file types should be added here and in the CDOpen function
 void newCD(const char * filename)
 {
-	// SysPrintf("start newCD()\r\n");
-	
 	CD.type = Bin;
 	openBin(filename);
 	addBinTrackInfo();
 	
 	CD.bufferPos = 0x7FFFFFFF;
 	seekSector(0,2,0);
-
-	// SysPrintf("end newCD\r\n");
 }
 
 
 // return the sector address - the buffer address + 12 bytes for offset.
-unsigned char* getSector()
+unsigned char* getSector(int subchannel)
 {
-	// SysPrintf("getSector()\r\n");
-    return CD.buffer + (CD.sector - CD.bufferPos) + 12;
+	return CD.buffer + (CD.sector - CD.bufferPos) + ((subchannel) ? 0 : 12);
 }
 
 // returns the number of tracks
 char getNumTracks()
 {
-	// SysPrintf("start getNumTracks()\r\n");
-	// if there's no open cd, return -1
 	if (CD.cd == 0) {
 	    return -1;
 	}
-
-	// printf("numtracks %d\n",CD.numtracks);
-	// SysPrintf("end getNumTracks()\r\n");
 	return CD.numtracks;
 }
 
 void readit(const unsigned char m, const unsigned char s, const unsigned char f)
 {
-	// SysPrintf("start readit()\r\n");
-	// printf(" not cached %08x %08x\n",CD.sector - CD.bufferPos, BUFFER_SIZE);
 	
 	// fakie ISO support.  iso is just cd-xa data without the ecc and header.
 	// read in the same number of sectors then space it out to look like cd-xa
@@ -208,31 +187,22 @@ void readit(const unsigned char m, const unsigned char s, const unsigned char f)
 	else */
 	{
 		rc = fseek(CD.cd, CD.sector, SEEK_SET);
-	// printf(" seek1 rc %d\n", rc);
-		rc = fread(CD.buffer, sizeof(unsigned char) * BUFFER_SIZE, 1, CD.cd);
-	// printf(" seek2 rc %d\n", rc);
+		rc = fread(CD.buffer, BUFFER_SIZE, 1, CD.cd);
 	}
 	
 	CD.bufferPos = CD.sector;
-	
-	// SysPrintf("end readit()\r\n");
 }
 
 
 void seekSector(const unsigned char m, const unsigned char s, const unsigned char f)
 {
-	// SysPrintf("start seekSector()\r\n");
-	
 	// calc byte to search for
-	CD.sector = (( (m * 60) + (s - 2)) * 75 + f) * 2352;
-	
-	// printf("seek %d %02d:%02d:%02d",CD.sector, (int)m, (int)s, (int)f);
+	int sector = (( (m * 60) + (s - 2)) * 75 + f);
+	CD.sector = sector * 2352;
 	
 	// is it cached?
 	if ((CD.sector >= CD.bufferPos) && (CD.sector < (CD.bufferPos + BUFFER_SIZE)) ) 
 	{
-		// printf(" cached %d %d\n",CD.sector - CD.bufferPos,BUFFER_SIZE);
-		// SysPrintf("end seekSector()\r\n");
 	    return;
 	}
 	// not cached - read a few blocks into the cache
@@ -240,7 +210,6 @@ void seekSector(const unsigned char m, const unsigned char s, const unsigned cha
 	{
 		readit(m,s,f);
 	}
-	// SysPrintf("end seekSector()\r\n");
 }
 
 long CDR__open(void)
@@ -281,15 +250,10 @@ long CDR__close(void) {
 }
 
 long CDR__getTN(unsigned char *buffer) {
-	// SysPrintf("start CDR_getTN()\r\n");
-	// SysPrintf("end CDR_getTN()\r\n");
     return getTN(buffer);
-	// return 0;
 }
 
 long CDR__getTD(unsigned char track, unsigned char *buffer) {
-	// SysPrintf("start CDR_getTD()\r\n");
-	// printf("getTD from track %d\n", track);
 	
 	unsigned char temp[3];
 	int result = getTD((int)track, temp);
@@ -298,26 +262,25 @@ long CDR__getTD(unsigned char track, unsigned char *buffer) {
 	
 	buffer[1] = temp[1];
 	buffer[2] = temp[0];
-	
-	// SysPrintf("end CDR_getTD()\r\n");
 	return 0;
 }
 
+/* called when the psx requests a read */
 long CDR__readTrack(unsigned char *time) {
-	// SysPrintf("start CDR_readTrack()\r\n");
-	// printf("readTrack at %02d:%02d:%02d\n", BCDToInt(time[0]), BCDToInt(time[1]), BCDToInt(time[2]));
-	
-	//cdrom_reinit();
-	
-	seekSector(BCDToInt(time[0]), BCDToInt(time[1]), BCDToInt(time[2]));
-	
-	// SysPrintf("end CDR_readTrack()\r\n");
-	return 0;
+	if (CD.cd != 0)
+		seekSector(BCDToInt(time[0]), BCDToInt(time[1]), BCDToInt(time[2]));
+	return PSE_CDR_ERR_SUCCESS;
 }
 
+/* called after the read should be finished, and the data is needed */
 unsigned char *CDR__getBuffer(void) {
-	// SysPrintf("start CDR_getBuffer()\r\n");
-    return getSector();
+	if (CD.cd == 0)
+		return NULL;
+    return getSector(0);
+}
+
+unsigned char *CDR__getBufferSub(void) {
+    return getSector(1);
 }
 
 /*
