@@ -36,6 +36,9 @@
 #define PSX_BUTTON_DDOWN	~(1 << 6)
 #define PSX_BUTTON_DLEFT	~(1 << 7)
 
+/* Controller type, later do this by a Variable in the GUI */
+//#define TYPE_ANALOG //(Doesn't work on some games)
+
 long  PadFlags = 0;
 
 long PAD__init(long flags) {
@@ -57,9 +60,6 @@ long PAD__shutdown(void) {
 
 long PAD__open(void)
 {
-//	SysPrintf("start PAD_open()\r\n");
-
-//	SysPrintf("end PAD_open()\r\n");
 	return PSE_PAD_ERR_SUCCESS;
 }
 
@@ -68,95 +68,101 @@ long PAD__close(void) {
 }
 
 long PAD__readPort1(PadDataS* pad) {
+
 	int b = PAD_ButtonsHeld(0);
 	uint16_t pad_status = 0xFFFF;	//bit pointless why is this done this way?
 	
 	/* PAD Buttons, Start = Start, Select = Start+Z, Cross = A, Square = B, Triangle = Y, Circle = X */
-	if (!((b & PAD_BUTTON_START) && (!(b & PAD_TRIGGER_Z))))
+	if ((b & PAD_BUTTON_START) && (!(b & PAD_TRIGGER_Z)))
 		pad_status &= PSX_BUTTON_START;
-	if (!((b & PAD_BUTTON_START) && (b & PAD_TRIGGER_Z)))
+	if ((b & PAD_BUTTON_START) && (b & PAD_TRIGGER_Z))
 		pad_status &= PSX_BUTTON_SELECT;
-	if (!(b & PAD_BUTTON_A))
+	if (b & PAD_BUTTON_A)
 		pad_status &= PSX_BUTTON_CROSS;
-	if (!(b & PAD_BUTTON_B))
+	if (b & PAD_BUTTON_B)
 		pad_status &= PSX_BUTTON_SQUARE;
-	if (!(b & PAD_BUTTON_X))
+	if (b & PAD_BUTTON_X)
 		pad_status &= PSX_BUTTON_CIRCLE;
-	if (!(b & PAD_BUTTON_Y))
+	if (b & PAD_BUTTON_Y)
 		pad_status &= PSX_BUTTON_TRIANGLE;
-	if (!(b & PAD_BUTTON_UP))
+	if (b & PAD_BUTTON_UP)
 		pad_status &= PSX_BUTTON_DUP;
-	if (!(b & PAD_BUTTON_DOWN))
+	if (b & PAD_BUTTON_DOWN)
 		pad_status &= PSX_BUTTON_DDOWN;
-	if (!(b & PAD_BUTTON_LEFT))
+	if (b & PAD_BUTTON_LEFT)
 		pad_status &= PSX_BUTTON_DLEFT;
-	if (!(b & PAD_BUTTON_RIGHT))
+	if (b & PAD_BUTTON_RIGHT)
 		pad_status &= PSX_BUTTON_DRIGHT;
 	/* Shoulder Buttons, L1 = L, R1 = R, L2 = L+Z, R2 = R+Z */
-	if (!((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_R)))
+	if ((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_R))
 		pad_status &= PSX_BUTTON_R2;
-	if (!((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_L)))
+	if ((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_L))
 		pad_status &= PSX_BUTTON_L2;
-	if (!((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_R)))
+	if ((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_R))
 		pad_status &= PSX_BUTTON_R1;
-	if (!((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_L)))
+	if ((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_L))
 		pad_status &= PSX_BUTTON_L1;
 					
-	
+#if TYPE_ANALOG
 	//adjust values by 128 cause psx values in range 0-255 where 128 is center position
 	pad->leftJoyX = PAD_StickX(0)+128;				//analog stick
 	pad->leftJoyY = PAD_StickY(0)+128;		
 	pad->rightJoyX = PAD_SubStickX(0)+128;			//C-stick (Left JoyStick)
 	pad->rightJoyY = PAD_SubStickY(0)+128;	
-	
-	pad->controllerType = PSE_PAD_TYPE_ANALOGPAD; 	// Analog Pad  (Right JoyStick)
+	pad->controllerType = PSE_PAD_TYPE_ANALOGJOY; 	// Analog Pad  (Right JoyStick)
+#else
+	pad->controllerType = PSE_PAD_TYPE_STANDARD; 	// Standard Pad
+#endif
 	pad->buttonStatus = pad_status;					//Copy Buttons
 	return PSE_PAD_ERR_SUCCESS;
 }
 
 long PAD__readPort2(PadDataS* pad) {
+
 	int b = PAD_ButtonsHeld(1);
 	uint16_t pad_status = 0xFFFF;	//bit pointless why is this done this way?
 	
 	/* PAD Buttons, Start = Start, Select = Start+Z, Cross = A, Square = B, Triangle = Y, Circle = X */
-	if (!((b & PAD_BUTTON_START) && (!(b & PAD_TRIGGER_Z))))
+	if ((b & PAD_BUTTON_START) && (!(b & PAD_TRIGGER_Z)))
 		pad_status &= PSX_BUTTON_START;
-	if (!((b & PAD_BUTTON_START) && (b & PAD_TRIGGER_Z)))
+	if ((b & PAD_BUTTON_START) && (b & PAD_TRIGGER_Z))
 		pad_status &= PSX_BUTTON_SELECT;
-	if (!(b & PAD_BUTTON_A))
+	if (b & PAD_BUTTON_A)
 		pad_status &= PSX_BUTTON_CROSS;
-	if (!(b & PAD_BUTTON_B))
+	if (b & PAD_BUTTON_B)
 		pad_status &= PSX_BUTTON_SQUARE;
-	if (!(b & PAD_BUTTON_X))
+	if (b & PAD_BUTTON_X)
 		pad_status &= PSX_BUTTON_CIRCLE;
-	if (!(b & PAD_BUTTON_Y))
+	if (b & PAD_BUTTON_Y)
 		pad_status &= PSX_BUTTON_TRIANGLE;
-	if (!(b & PAD_BUTTON_UP))
+	if (b & PAD_BUTTON_UP)
 		pad_status &= PSX_BUTTON_DUP;
-	if (!(b & PAD_BUTTON_DOWN))
+	if (b & PAD_BUTTON_DOWN)
 		pad_status &= PSX_BUTTON_DDOWN;
-	if (!(b & PAD_BUTTON_LEFT))
+	if (b & PAD_BUTTON_LEFT)
 		pad_status &= PSX_BUTTON_DLEFT;
-	if (!(b & PAD_BUTTON_RIGHT))
+	if (b & PAD_BUTTON_RIGHT)
 		pad_status &= PSX_BUTTON_DRIGHT;
 	/* Shoulder Buttons, L1 = L, R1 = R, L2 = L+Z, R2 = R+Z */
-	if (!((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_R)))
+	if ((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_R))
 		pad_status &= PSX_BUTTON_R2;
-	if (!((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_L)))
+	if ((b & PAD_TRIGGER_Z) && (b & PAD_TRIGGER_L))
 		pad_status &= PSX_BUTTON_L2;
-	if (!((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_R)))
+	if ((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_R))
 		pad_status &= PSX_BUTTON_R1;
-	if (!((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_L)))
+	if ((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_L))
 		pad_status &= PSX_BUTTON_L1;
 					
-	
+#if TYPE_ANALOG
 	//adjust values by 128 cause psx values in range 0-255 where 128 is center position
 	pad->leftJoyX = PAD_StickX(1)+128;				//analog stick
 	pad->leftJoyY = PAD_StickY(1)+128;		
 	pad->rightJoyX = PAD_SubStickX(1)+128;			//C-stick (Left JoyStick)
 	pad->rightJoyY = PAD_SubStickY(1)+128;	
-	
-	pad->controllerType = PSE_PAD_TYPE_ANALOGPAD; 	// Analog Pad  (Right JoyStick)
+	pad->controllerType = PSE_PAD_TYPE_ANALOGJOY; 	// Analog Pad  (Right JoyStick)
+#else
+	pad->controllerType = PSE_PAD_TYPE_STANDARD; 	// Standard Pad
+#endif
 	pad->buttonStatus = pad_status;					//Copy Buttons
 	return PSE_PAD_ERR_SUCCESS;
 }
