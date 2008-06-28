@@ -25,7 +25,9 @@ INCLUDES	:=	.. ../ppc/
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ -D__GX__ -D_SDL -DSHOW_DEBUG
+CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
+		  -D__GX__ -D_SDL -DSHOW_DEBUG -DEMBEDDED_FONTS
+		  
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
