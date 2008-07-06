@@ -138,10 +138,12 @@ int main(int argc, char *argv[]) {
 	strcpy(Config.Net,"Disabled");
 
 	Config.Cpu = 1;	//interpreter
-
-//	Config.CdTiming = 0;	//no longer used
+	Config.CpuBias = 2; //for 50/60fps
 	Config.PsxOut = 1;
 	Config.HLE = 1;
+	Config.Xa = 1;
+	Config.Cdda = 0;
+	Config.PsxType = 0; //NTSC PSX
     SysPrintf("start main()\r\n");
 
 	if (SysInit() == -1) 
@@ -160,11 +162,7 @@ int main(int argc, char *argv[]) {
 	CDR_open();
     SysPrintf("CheckCdrom()\r\n");
 	CheckCdrom();
-	
-
-//	SysPrintf("Load()\r\n");
-//	Load("/rd/pdx-dlcm.psx");
-	LoadCdrom();		//code dies here if we try to execute cd-rom
+	LoadCdrom();
 
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();
