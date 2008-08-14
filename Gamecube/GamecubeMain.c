@@ -159,11 +159,11 @@ int main(int argc, char *argv[]) {
 	
 	SysReset();
 	
-	CDR_open();
+/*	CDR_open();
     SysPrintf("CheckCdrom()\r\n");
 	CheckCdrom();
 	LoadCdrom();
-
+*/
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();
 

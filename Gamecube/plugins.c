@@ -37,6 +37,7 @@ void *hGPUDriver;
 
 void ConfigurePlugins();
 
+#if 0 // These are actually in the GPU plugin (and probably work in there )
 void CALLBACK GPU__readDataMem(unsigned long *pMem, int iSize) {
 	while (iSize > 0) {
 		*pMem = GPU_readData();
@@ -57,9 +58,11 @@ void CALLBACK GPU__writeDataMem(unsigned long *pMem, int iSize) {
 void CALLBACK GPU__displayText(char *pText) {
 	SysPrintf("%s\n", pText);
 }
+#endif
 
 extern int StatesC;
 long CALLBACK GPU__freeze(unsigned long ulGetFreezeData, GPUFreeze_t *pF) {
+
 	pF->ulFreezeVersion = 1;
 	if (ulGetFreezeData == 0) {
 		int val;
@@ -120,8 +123,10 @@ long CALLBACK GPU__freeze(unsigned long ulGetFreezeData, GPUFreeze_t *pF) {
 		GPU_displayText(Text);
 		return 1;
 	}
+
 	return 0;
 }
+
 
 long CALLBACK GPU__configure(void) { return 0; }
 long CALLBACK GPU__test(void) { return 0; }
@@ -132,7 +137,7 @@ long CALLBACK GPU__getScreenPic(unsigned char *pMem) { return -1; }
 long CALLBACK GPU__showScreenPic(unsigned char *pMem) { return -1; }
 void CALLBACK GPU__clearDynarec(void (CALLBACK *callback)(void)) { }
 
-#define LoadGpuSym1(dest, name) \
+#define LoadGpuSym1(dest, name) \	
 	LoadSym(GPU_##dest, GPU##dest, name, 1);
 
 #define LoadGpuSym0(dest, name) \
@@ -155,18 +160,17 @@ int LoadGPUplugin(char *GPUdll) {
 	LoadGpuSym1(init, "GPUinit");
 	LoadGpuSym1(shutdown, "GPUshutdown");
 	LoadGpuSym1(open, "GPUopen");
-//	SysPrintf ("GPU_open = %x\n",GPU_open);
 	LoadGpuSym1(close, "GPUclose");
 	LoadGpuSym1(readData, "GPUreadData");
-	LoadGpuSym0(readDataMem, "GPUreadDataMem");
+	LoadGpuSym1(readDataMem, "GPUreadDataMem");
 	LoadGpuSym1(readStatus, "GPUreadStatus");
 	LoadGpuSym1(writeData, "GPUwriteData");
-	LoadGpuSym0(writeDataMem, "GPUwriteDataMem");
+	LoadGpuSym1(writeDataMem, "GPUwriteDataMem");
 	LoadGpuSym1(writeStatus, "GPUwriteStatus");
 	LoadGpuSym1(dmaChain, "GPUdmaChain");
 	LoadGpuSym1(updateLace, "GPUupdateLace");
 	LoadGpuSym0(keypressed, "GPUkeypressed");
-	LoadGpuSym0(displayText, "GPUdisplayText");
+	LoadGpuSym1(displayText, "GPUdisplayText");
 	LoadGpuSym0(makeSnapshot, "GPUmakeSnapshot");
 	LoadGpuSym0(freeze, "GPUfreeze");
 	LoadGpuSym0(getScreenPic, "GPUgetScreenPic");

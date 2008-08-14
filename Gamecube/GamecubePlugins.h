@@ -107,6 +107,9 @@ unsigned long PEOPS_GPUreadStatus(void);
 unsigned long PEOPS_GPUreadData(void);
 long PEOPS_GPUdmaChain(unsigned long *,unsigned long);
 void PEOPS_GPUupdateLace(void);
+void PEOPS_GPUreadDataMem(unsigned long * pMem, int iSize);
+void PEOPS_GPUwriteDataMem(unsigned long * pMem, int iSize);
+void PEOPS_GPUdisplayText(char * pText);
 
 #define EMPTY_PLUGIN \
 	{ NULL,      \
@@ -253,7 +256,7 @@ void PEOPS_GPUupdateLace(void);
 
 #define GPU_PEOPS_PLUGIN \
 	{ "GPU",      \
-	  10,         \
+	  13,         \
 	  { { "GPUinit",  \
 	      PEOPS_GPUinit }, \
 	    { "GPUshutdown",	\
@@ -266,12 +269,18 @@ void PEOPS_GPUupdateLace(void);
 	      PEOPS_GPUwriteStatus}, \
 	    { "GPUwriteData", \
 	      PEOPS_GPUwriteData}, \
+	    { "GPUwriteDataMem", \
+	      PEOPS_GPUwriteDataMem}, \
 	    { "GPUreadStatus", \
 	      PEOPS_GPUreadStatus}, \
 	    { "GPUreadData", \
 	      PEOPS_GPUreadData}, \
+	   	{ "GPUreadDataMem", \
+	      PEOPS_GPUreadDataMem}, \
 	    { "GPUdmaChain", \
 	      PEOPS_GPUdmaChain}, \
+		{ "GPUdisplayText", \
+	      PEOPS_GPUdisplayText}, \
 	    { "GPUupdateLace", \
 	      PEOPS_GPUupdateLace} \
 	       } }
