@@ -114,6 +114,10 @@
 
 #include "stdafx.h"
 
+#ifdef __GX__
+#include "../Gamecube/DEBUG.h"
+#endif //__GX__
+
 #ifdef _WINDOWS
 
 #include <stdlib.h>
@@ -298,9 +302,9 @@ time_t tStart;
 
 #ifndef __GX__
 void CALLBACK GPUdisplayText(char * pText)             // some debug func
-#else
+#else //!__GX__
 void PEOPS_GPUdisplayText(char * pText)             // some debug func
-#endif
+#endif //__GX__
 {
  if(!pText) {szDebugText[0]=0;return;}
  if(strlen(pText)>511) return;
@@ -941,6 +945,12 @@ void CALLBACK GPUupdateLace(void)                      // VSYNC
 void PEOPS_GPUupdateLace(void)
 #endif //__GX__
 {
+#ifdef PEOPS_SDLOG
+	DEBUG_print("append",DBG_SDGECKOAPPEND);
+	sprintf(txtbuffer,"Calling GPUupdateLace()\r\n");
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+	DEBUG_print("close",DBG_SDGECKOCLOSE);
+#endif //PEOPS_SDLOG
  if(!(dwActFixes&1))
   lGPUstatusRet^=0x80000000;                           // odd/even bit
 
@@ -1321,11 +1331,12 @@ __inline void FinishedVRAMRead(void)
 ////////////////////////////////////////////////////////////////////////
 // core read from vram
 ////////////////////////////////////////////////////////////////////////
+
 #ifndef __GX__
-void GPUreadDataMem(unsigned long * pMem, int iSize)
+void CALLBACK GPUreadDataMem(unsigned long * pMem, int iSize)
 #else //!__GX__
 void PEOPS_GPUreadDataMem(unsigned long * pMem, int iSize)
-#endif // __GX__
+#endif //__GX__
 {
  int i;
 
@@ -1396,11 +1407,7 @@ unsigned long PEOPS_GPUreadData(void)
 #endif //__GX__
 {
  unsigned long l;
-#ifndef __GX__
- GPUreadDataMem(&l,1);
-#else
  PEOPS_GPUreadDataMem(&l,1);
-#endif
  return lGPUdataRet;
 }
 
@@ -1478,8 +1485,9 @@ const unsigned char primTableCX[256] =
     // f8
     0,0,0,0,0,0,0,0
 };
+
 #ifndef __GX__
-void GPUwriteDataMem(unsigned long * pMem, int iSize)
+void CALLBACK GPUwriteDataMem(unsigned long * pMem, int iSize)
 #else //!__GX__
 void PEOPS_GPUwriteDataMem(unsigned long * pMem, int iSize)
 #endif // __GX__
@@ -1487,6 +1495,14 @@ void PEOPS_GPUwriteDataMem(unsigned long * pMem, int iSize)
  unsigned char command;
  unsigned long gdata=0;
  int i=0;
+
+#ifdef PEOPS_SDLOG
+ int jj,jjmax;
+	DEBUG_print("append",DBG_SDGECKOAPPEND);
+	sprintf(txtbuffer,"Calling GPUwriteDataMem(): mode = %d, *pmem = 0x%8x, iSize = %d\r\n",DataWriteMode,GETLE32(pMem),iSize);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+	DEBUG_print("close",DBG_SDGECKOCLOSE);
+#endif //PEOPS_SDLOG
 
  GPUIsBusy;
  GPUIsNotReadyForCommands;
@@ -1592,6 +1608,20 @@ ENDVRAM:
  
      if(gpuDataP == gpuDataC)
       {
+#ifdef PEOPS_SDLOG
+	DEBUG_print("append",DBG_SDGECKOAPPEND);
+	sprintf(txtbuffer,"  primeFunc[%d](",gpuCommand);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+	jjmax = (gpuDataC>128) ? 6 : gpuDataP;
+	for(jj = 0; jj<jjmax; jj++)
+	{
+		sprintf(txtbuffer," 0x%8x",gpuDataM[jj]);
+		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+	}
+	sprintf(txtbuffer,")\r\n");
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+	DEBUG_print("close",DBG_SDGECKOCLOSE);
+#endif //PEOPS_SDLOG
        gpuDataC=gpuDataP=0;
        primFunc[gpuCommand]((unsigned char *)gpuDataM);
 
@@ -1616,11 +1646,7 @@ void PEOPS_GPUwriteData(unsigned long gdata)
 #endif // __GX__
 {
  PUTLE32(&gdata, gdata);
- #ifndef __GX__
- GPUwriteDataMem(&gdata,1);
- #else
  PEOPS_GPUwriteDataMem(&gdata,1);
- #endif
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1709,6 +1735,13 @@ long PEOPS_GPUdmaChain(unsigned long * baseAddrL, unsigned long addr)
  unsigned char * baseAddrB;
  short count;unsigned int DMACommandCounter = 0;
 
+ #ifdef PEOPS_SDLOG
+	DEBUG_print("append",DBG_SDGECKOAPPEND);
+	sprintf(txtbuffer,"Calling GPUdmaChain(): *baseAddrL = 0x%8x, addr = 0x%8x\r\n",baseAddrL, addr);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+	DEBUG_print("close",DBG_SDGECKOCLOSE);
+#endif //PEOPS_SDLOG
+
  GPUIsBusy;
 
  lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
@@ -1724,11 +1757,8 @@ long PEOPS_GPUdmaChain(unsigned long * baseAddrL, unsigned long addr)
    count = baseAddrB[addr+3];
 
    dmaMem=addr+4;
-#ifndef __GX__
-   if(count>0) GPUwriteDataMem(&baseAddrL[dmaMem>>2],count);
-#else
+
    if(count>0) PEOPS_GPUwriteDataMem(&baseAddrL[dmaMem>>2],count);
-#endif
 
    addr = GETLE32(&baseAddrL[addr>>2])&0xffffff;
   }
@@ -1796,11 +1826,12 @@ typedef struct GPUFREEZETAG
 } GPUFreeze_t;
 
 ////////////////////////////////////////////////////////////////////////
+
 #ifndef __GX__
 long CALLBACK GPUfreeze(unsigned long ulGetFreezeData,GPUFreeze_t * pF)
-#else
+#else //!__GX__
 long PEOPS_GPUfreeze(unsigned long ulGetFreezeData,GPUFreeze_t * pF)
-#endif
+#endif //__GX__
 {
  //----------------------------------------------------//
  if(ulGetFreezeData==2)                                // 2: info, which save slot is selected? (just for display)

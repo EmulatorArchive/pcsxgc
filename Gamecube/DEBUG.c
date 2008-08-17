@@ -13,7 +13,7 @@
 //#include "usb.h"
 
 char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
-char printToSD;
+char printToSD = 1;
 
 #ifdef SHOW_DEBUG
 char txtbuffer[1024];
@@ -49,7 +49,8 @@ void DEBUG_update() {
 int flushed = 0;
 int writtenbefore = 0;
 int amountwritten = 0;
-char *dump_filename = "dev0:\\PSXROMS\\debug.txt";
+//char *dump_filename = "dev0:\\PSXISOS\\debug.txt";
+char *dump_filename = "/PSXISOS/debug.txt";
 FILE* f = NULL;
 void DEBUG_print(char* string,int pos){
 
@@ -69,6 +70,12 @@ void DEBUG_print(char* string,int pos){
 #ifdef SDPRINT
 			if(!f && printToSD)
 				f = fopen( dump_filename, "wb" );
+#endif
+		}
+		else if(pos == DBG_SDGECKOAPPEND) {
+#ifdef SDPRINT
+			if(!f && printToSD)
+				f = fopen( dump_filename, "ab" );
 #endif
 		}
 		else if(pos == DBG_SDGECKOCLOSE) {

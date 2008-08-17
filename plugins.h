@@ -19,6 +19,13 @@
 #ifndef __PLUGINS_H__
 #define __PLUGINS_H__
 
+typedef struct {
+	unsigned long ulFreezeVersion;
+	unsigned long ulStatus;
+	unsigned long ulControl[256];
+	unsigned char psxVRam[1024*512*2];
+} GPUFreeze_t;
+
 #if defined (__WIN32__)
 #include "Win32\plugin.h"
 #elif defined(__LINUX__) || defined(__MACOSX__)
@@ -72,12 +79,6 @@ typedef void (CALLBACK* GPUabout)(void);
 typedef void (CALLBACK* GPUmakeSnapshot)(void);
 typedef void (CALLBACK* GPUkeypressed)(int);
 typedef void (CALLBACK* GPUdisplayText)(char *);
-typedef struct {
-	unsigned long ulFreezeVersion;
-	unsigned long ulStatus;
-	unsigned long ulControl[256];
-	unsigned char psxVRam[1024*512*2];
-} GPUFreeze_t;
 typedef long (CALLBACK* GPUfreeze)(unsigned long, GPUFreeze_t *);
 typedef long (CALLBACK* GPUgetScreenPic)(unsigned char *);
 typedef long (CALLBACK* GPUshowScreenPic)(unsigned char *);

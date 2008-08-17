@@ -137,7 +137,7 @@ long CALLBACK GPU__getScreenPic(unsigned char *pMem) { return -1; }
 long CALLBACK GPU__showScreenPic(unsigned char *pMem) { return -1; }
 void CALLBACK GPU__clearDynarec(void (CALLBACK *callback)(void)) { }
 
-#define LoadGpuSym1(dest, name) \	
+#define LoadGpuSym1(dest, name) \
 	LoadSym(GPU_##dest, GPU##dest, name, 1);
 
 #define LoadGpuSym0(dest, name) \
@@ -172,7 +172,7 @@ int LoadGPUplugin(char *GPUdll) {
 	LoadGpuSym0(keypressed, "GPUkeypressed");
 	LoadGpuSym1(displayText, "GPUdisplayText");
 	LoadGpuSym0(makeSnapshot, "GPUmakeSnapshot");
-	LoadGpuSym0(freeze, "GPUfreeze");
+	LoadGpuSym1(freeze, "GPUfreeze");
 	LoadGpuSym0(getScreenPic, "GPUgetScreenPic");
 	LoadGpuSym0(showScreenPic, "GPUshowScreenPic");
 	LoadGpuSym0(clearDynarec, "GPUclearDynarec");

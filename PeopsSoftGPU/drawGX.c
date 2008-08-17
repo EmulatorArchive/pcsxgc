@@ -69,7 +69,6 @@ extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH]; /*** DEBUG textbuffer ***
 void BlitScreenNS_GX(unsigned char * surf,long x,long y, short dx, short dy);
 void GX_Flip(short width, short height, u8 * buffer, int pitch);
 
-
 void DoBufferSwap(void)                                // SWAP BUFFERS
 {                                                      // (we don't swap... we blit only)
 	static int iOldDX=0;
@@ -82,7 +81,7 @@ void DoBufferSwap(void)                                // SWAP BUFFERS
 
 	//Uncomment the following line to render all of vmem on screen.
 	//Note: may break when PSX is in true color mode...
-//	x = 0; y = 0; iDX = 1024; iDY = 512;
+	//x = 0; y = 0; iDX = 1024; iDY = 512;
 
  // TODO: visual rumble
 
@@ -154,7 +153,6 @@ void DoClearScreenBuffer(void)                         // CLEAR DX BUFFER
 }
 
 ////////////////////////////////////////////////////////////////////////
-
 
 void DoClearFrontBuffer(void)                          // CLEAR DX BUFFER
 {

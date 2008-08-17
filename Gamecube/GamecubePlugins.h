@@ -24,6 +24,7 @@
 #endif
 #include "Decode_XA.h"
 #include "PSEmu_Plugin_Defs.h"
+#include "../plugins.h"
 
 #define SYMS_PER_LIB 32
 typedef struct {
@@ -103,13 +104,14 @@ long PEOPS_GPUshutdown(void);
 long PEOPS_GPUclose(void);
 void PEOPS_GPUwriteStatus(unsigned long);
 void PEOPS_GPUwriteData(unsigned long);
+void PEOPS_GPUwriteDataMem(unsigned long *, int);
 unsigned long PEOPS_GPUreadStatus(void);
 unsigned long PEOPS_GPUreadData(void);
+void PEOPS_GPUreadDataMem(unsigned long *, int);
 long PEOPS_GPUdmaChain(unsigned long *,unsigned long);
 void PEOPS_GPUupdateLace(void);
-void PEOPS_GPUreadDataMem(unsigned long * pMem, int iSize);
-void PEOPS_GPUwriteDataMem(unsigned long * pMem, int iSize);
-void PEOPS_GPUdisplayText(char * pText);
+void PEOPS_GPUdisplayText(char *);
+long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 
 #define EMPTY_PLUGIN \
 	{ NULL,      \
@@ -256,7 +258,7 @@ void PEOPS_GPUdisplayText(char * pText);
 
 #define GPU_PEOPS_PLUGIN \
 	{ "GPU",      \
-	  13,         \
+	  14,         \
 	  { { "GPUinit",  \
 	      PEOPS_GPUinit }, \
 	    { "GPUshutdown",	\
@@ -275,12 +277,14 @@ void PEOPS_GPUdisplayText(char * pText);
 	      PEOPS_GPUreadStatus}, \
 	    { "GPUreadData", \
 	      PEOPS_GPUreadData}, \
-	   	{ "GPUreadDataMem", \
+	    { "GPUreadDataMem", \
 	      PEOPS_GPUreadDataMem}, \
 	    { "GPUdmaChain", \
 	      PEOPS_GPUdmaChain}, \
-		{ "GPUdisplayText", \
+	    { "GPUdisplayText", \
 	      PEOPS_GPUdisplayText}, \
+	    { "GPUfreeze", \
+	      PEOPS_GPUfreeze}, \
 	    { "GPUupdateLace", \
 	      PEOPS_GPUupdateLace} \
 	       } }

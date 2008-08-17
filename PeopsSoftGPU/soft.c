@@ -71,7 +71,11 @@
 //*************************************************************************// 
 
 #include "stdafx.h"
- 
+
+#ifdef __GX__
+#include "../Gamecube/DEBUG.h"
+#endif //__GX__
+
 #define _IN_SOFT
                    
 #include "externals.h"
@@ -300,7 +304,7 @@ void Dither16(unsigned short * pdest,unsigned long r,unsigned long g,unsigned lo
 /////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////
 
-__inline__ void GetShadeTransCol_Dither(unsigned short * pdest,long m1,long m2,long m3) __attribute__ ((__pure__));
+//__inline__ void GetShadeTransCol_Dither(unsigned short * pdest,long m1,long m2,long m3) __attribute__ ((__pure__));
 __inline__ void GetShadeTransCol_Dither(unsigned short * pdest,long m1,long m2,long m3)
 {
  long r,g,b;
@@ -364,7 +368,7 @@ __inline__ void GetShadeTransCol_Dither(unsigned short * pdest,long m1,long m2,l
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetShadeTransCol(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
+//__inline__ void GetShadeTransCol(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
 __inline__ void GetShadeTransCol(unsigned short * pdest,unsigned short color)
 {
  if(bCheckMask && (*pdest & HOST2LE16(0x8000))) return;
@@ -423,7 +427,7 @@ __inline__ void GetShadeTransCol(unsigned short * pdest,unsigned short color)
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetShadeTransCol32(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
+//__inline__ void GetShadeTransCol32(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
 __inline__ void GetShadeTransCol32(unsigned long * pdest,unsigned long color)
 {
  if(DrawSemiTrans)
@@ -515,7 +519,7 @@ __inline__ void GetShadeTransCol32(unsigned long * pdest,unsigned long color)
 }  
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColG(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColG(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColG(unsigned short * pdest,unsigned short color)
 {
  long r,g,b;unsigned short l;
@@ -588,7 +592,7 @@ __inline__ void GetTextureTransColG(unsigned short * pdest,unsigned short color)
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColG_S(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColG_S(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColG_S(unsigned short * pdest,unsigned short color)
 {
  long r,g,b;unsigned short l;
@@ -609,7 +613,7 @@ __inline__ void GetTextureTransColG_S(unsigned short * pdest,unsigned short colo
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColG_SPR(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColG_SPR(unsigned short * pdest,unsigned short color) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColG_SPR(unsigned short * pdest,unsigned short color)
 {
  long r,g,b;unsigned short l;
@@ -682,7 +686,7 @@ __inline__ void GetTextureTransColG_SPR(unsigned short * pdest,unsigned short co
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColG32(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColG32(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColG32(unsigned long * pdest,unsigned long color)
 {
  long r,g,b,l;
@@ -786,7 +790,7 @@ __inline__ void GetTextureTransColG32(unsigned long * pdest,unsigned long color)
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColG32_S(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColG32_S(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColG32_S(unsigned long * pdest,unsigned long color)
 {
  long r,g,b;
@@ -811,7 +815,7 @@ __inline__ void GetTextureTransColG32_S(unsigned long * pdest,unsigned long colo
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColG32_SPR(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColG32_SPR(unsigned long * pdest,unsigned long color) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColG32_SPR(unsigned long * pdest,unsigned long color)
 {
  long r,g,b;
@@ -913,7 +917,7 @@ __inline__ void GetTextureTransColG32_SPR(unsigned long * pdest,unsigned long co
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColGX_Dither(unsigned short * pdest,unsigned short color,long m1,long m2,long m3) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColGX_Dither(unsigned short * pdest,unsigned short color,long m1,long m2,long m3) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColGX_Dither(unsigned short * pdest,unsigned short color,long m1,long m2,long m3)
 {
  long r,g,b;
@@ -984,7 +988,7 @@ __inline__ void GetTextureTransColGX_Dither(unsigned short * pdest,unsigned shor
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColGX(unsigned short * pdest,unsigned short color,short m1,short m2,short m3) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColGX(unsigned short * pdest,unsigned short color,short m1,short m2,short m3) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColGX(unsigned short * pdest,unsigned short color,short m1,short m2,short m3)
 {
  long r,g,b;unsigned short l;
@@ -1056,7 +1060,7 @@ __inline__ void GetTextureTransColGX(unsigned short * pdest,unsigned short color
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColGX_S(unsigned short * pdest,unsigned short color,short m1,short m2,short m3) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColGX_S(unsigned short * pdest,unsigned short color,short m1,short m2,short m3) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColGX_S(unsigned short * pdest,unsigned short color,short m1,short m2,short m3)
 {
  long r,g,b;
@@ -1075,7 +1079,7 @@ __inline__ void GetTextureTransColGX_S(unsigned short * pdest,unsigned short col
 }
 
 ////////////////////////////////////////////////////////////////////////
-__inline__ void GetTextureTransColGX32_S(unsigned long * pdest,unsigned long color,short m1,short m2,short m3) __attribute__ ((__pure__));
+//__inline__ void GetTextureTransColGX32_S(unsigned long * pdest,unsigned long color,short m1,short m2,short m3) __attribute__ ((__pure__));
 __inline__ void GetTextureTransColGX32_S(unsigned long * pdest,unsigned long color,short m1,short m2,short m3)
 {
  long r,g,b;
@@ -3092,6 +3096,7 @@ void drawPoly4TEx4(short x1, short y1, short x2, short y2, short x3, short y3, s
 
  YAdjust=((GlobalTextAddrY)<<11)+(GlobalTextAddrX<<1);
 
+
 #ifdef FASTSOLID
 
  if(!bCheckMask && !DrawSemiTrans)
@@ -4333,6 +4338,7 @@ void drawPoly4TD(short x1, short y1, short x2, short y2, short x3, short y3, sho
  long i,j,xmin,xmax,ymin,ymax;
  long difX, difY, difX2, difY2;
  long posX,posY;
+
 
  if(x1>drawW && x2>drawW && x3>drawW && x4>drawW) return;
  if(y1>drawH && y2>drawH && y3>drawH && y4>drawH) return;
@@ -6247,9 +6253,11 @@ void drawPoly3FT(unsigned char * baseAddr)
 {
  unsigned long *gpuData = ((unsigned long *) baseAddr);
 
-#ifndef __GX__
  if(GlobalTextIL && GlobalTextTP<2)
   {
+   	sprintf(txtbuffer,"Missing function drawPoly3TEx4_IL(). Notify sepp256 as to which game.");
+	DEBUG_print(txtbuffer,DBG_GPU1);
+#ifndef __GX__
    if(GlobalTextTP==0)
     drawPoly3TEx4_IL(lx0,ly0,lx1,ly1,lx2,ly2,
                      (GETLE32(&gpuData[2]) & 0x000000ff), ((GETLE32(&gpuData[2])>>8) & 0x000000ff), (GETLE32(&gpuData[4]) & 0x000000ff), ((GETLE32(&gpuData[4])>>8) & 0x000000ff),(GETLE32(&gpuData[6]) & 0x000000ff), ((GETLE32(&gpuData[6])>>8) & 0x000000ff), 
@@ -6259,8 +6267,8 @@ void drawPoly3FT(unsigned char * baseAddr)
                      (GETLE32(&gpuData[2]) & 0x000000ff), ((GETLE32(&gpuData[2])>>8) & 0x000000ff), (GETLE32(&gpuData[4]) & 0x000000ff), ((GETLE32(&gpuData[4])>>8) & 0x000000ff),(GETLE32(&gpuData[6]) & 0x000000ff), ((GETLE32(&gpuData[6])>>8) & 0x000000ff), 
                      ((GETLE32(&gpuData[2])>>12) & 0x3f0), ((GETLE32(&gpuData[2])>>22) & iGPUHeightMask));
    return;
-  }
 #endif //!__GX__
+  }
 
  if(!bUsingTWin && !(dwActFixes&0x100))
   {

@@ -6,6 +6,7 @@
 #define DEBUG_H
 
 //#define SDPRINT
+//#define PEOPS_SDLOG
 
 #define DBG_MEMFREEINFO 0
 #define DBG_CORE1	1
@@ -22,6 +23,7 @@
 #define DBG_PROFILE_TLB 14
 #define DBG_PROFILE_FP 15
 #define DBG_STATSBASE 12 // ALL stats print from this line onwards
+#define DBG_SDGECKOAPPEND 0xFB
 #define DBG_SDGECKOOPEN 0xFC
 #define DBG_SDGECKOCLOSE 0xFD
 #define DBG_SDGECKOPRINT 0xFE
