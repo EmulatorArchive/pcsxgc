@@ -42,7 +42,7 @@ typedef char* (*TdisR3000AF)(u32 code, u32 pc);
 #define MakeDisFg(fn, b) char* fn(u32 code, u32 pc) { b; return ostr; }
 #define MakeDisF(fn, b) \
 	static char* fn(u32 code, u32 pc) { \
-		sprintf (ostr, "%8.8lx %8.8lx:", pc, code); \
+		sprintf (ostr, "%8.8lx %8.8lx:", (long unsigned int)pc, (long unsigned int)code); \
 		b; /*ostr[(strlen(ostr) - 1)] = 0;*/ return ostr; \
 	}
 
@@ -73,11 +73,11 @@ typedef char* (*TdisR3000AF)(u32 code, u32 pc);
 #define dCP0(i)		sprintf(ostr, "%s %8.8lx (%s),", ostr, psxRegs.CP0.r[i], disRNameCP0[i])
 #define dHI()		sprintf(ostr, "%s %8.8lx (%s),", ostr, psxRegs.GPR.n.hi, "hi")
 #define dLO()		sprintf(ostr, "%s %8.8lx (%s),", ostr, psxRegs.GPR.n.lo, "lo")
-#define dImm()		sprintf(ostr, "%s %4.4lx (%ld),", ostr, _Im_, _Im_)
-#define dTarget()	sprintf(ostr, "%s %8.8lx,", ostr, _Target_)
-#define dSa()		sprintf(ostr, "%s %2.2lx (%ld),", ostr, _Sa_, _Sa_)
-#define dOfB()		sprintf(ostr, "%s %4.4lx (%8.8lx (%s)),", ostr, _Im_, psxRegs.GPR.r[_Rs_], disRNameGPR[_Rs_])
-#define dOffset()	sprintf(ostr, "%s %8.8lx,", ostr, _Branch_)
+#define dImm()		sprintf(ostr, "%s %4.4lx (%ld),", ostr, (unsigned long int)_Im_, (long int)_Im_)
+#define dTarget()	sprintf(ostr, "%s %8.8lx,", ostr, (long unsigned int)_Target_)
+#define dSa()		sprintf(ostr, "%s %2.2lx (%ld),", ostr, (long unsigned int)_Sa_, (long int)_Sa_)
+#define dOfB()		sprintf(ostr, "%s %4.4lx (%8.8lx (%s)),", ostr, (long unsigned int)_Im_, psxRegs.GPR.r[_Rs_], disRNameGPR[_Rs_])
+#define dOffset()	sprintf(ostr, "%s %8.8lx,", ostr, (long unsigned int)_Branch_)
 #define dCode()		sprintf(ostr, "%s %8.8lx,", ostr, (code >> 6) & 0xffffff)
 
 /*********************************************************
@@ -113,7 +113,7 @@ MakeDisF(disXOR,		dName("XOR");  dGPR(_Rd_); dGPR(_Rs_); dGPR(_Rt_);)
 *********************************************************/
 MakeDisF(disDIV,		dName("DIV");   dGPR(_Rs_); dGPR(_Rt_);)
 MakeDisF(disDIVU,		dName("DIVU");  dGPR(_Rs_); dGPR(_Rt_);)
-MakeDisF(disMULT,		dName("MULT");  dGPR(_Rs_); dGPR(_Rt_);)
+MakeDisF(disMULT,		dName("MULT");  dGPR(_Rs_); dGPR(_Rt_);) 
 MakeDisF(disMULTU,		dName("MULTU"); dGPR(_Rs_); dGPR(_Rt_);)
 
 /*********************************************************

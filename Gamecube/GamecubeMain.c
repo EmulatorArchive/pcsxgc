@@ -140,10 +140,10 @@ int main(int argc, char *argv[]) {
 	Config.Cpu = 1;	//interpreter
 	Config.CpuBias = 2; //for 50/60fps
 	Config.PsxOut = 1;
-	Config.HLE = 1;
-	Config.Xa = 1;
+	Config.HLE = 0;
+	Config.Xa = 0;
 	Config.Cdda = 0;
-	Config.PsxType = 0; //NTSC PSX
+	Config.PsxAuto = 1; //Autodetect
     SysPrintf("start main()\r\n");
 
 	if (SysInit() == -1) 
