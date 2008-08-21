@@ -37,7 +37,7 @@
 #define PSX_BUTTON_DLEFT	~(1 << 7)
 
 /* Controller type, later do this by a Variable in the GUI */
-//#define TYPE_ANALOG //(Doesn't work on some games)
+//#define TYPE_ANALOG //(Doesn't work on some/ALL?? games)
 
 long  PadFlags = 0;
 
@@ -103,12 +103,12 @@ long PAD__readPort1(PadDataS* pad) {
 	if ((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_L))
 		pad_status &= PSX_BUTTON_L1;
 					
-#if TYPE_ANALOG
+#ifdef TYPE_ANALOG
 	//adjust values by 128 cause psx values in range 0-255 where 128 is center position
-	pad->leftJoyX = PAD_StickX(0)+128;				//analog stick
-	pad->leftJoyY = PAD_StickY(0)+128;		
-	pad->rightJoyX = PAD_SubStickX(0)+128;			//C-stick (Left JoyStick)
-	pad->rightJoyY = PAD_SubStickY(0)+128;	
+	pad->leftJoyX  = (u8)(PAD_StickX(0)+128);				//analog stick
+	pad->leftJoyY  = (u8)(PAD_StickY(0)+128);		
+	pad->rightJoyX = (u8)(PAD_SubStickX(0)+128);			//C-stick (Left JoyStick)
+	pad->rightJoyY = (u8)(PAD_SubStickY(0)+128);	
 	pad->controllerType = PSE_PAD_TYPE_ANALOGJOY; 	// Analog Pad  (Right JoyStick)
 #else
 	pad->controllerType = PSE_PAD_TYPE_STANDARD; 	// Standard Pad
@@ -153,12 +153,12 @@ long PAD__readPort2(PadDataS* pad) {
 	if ((!(b & PAD_TRIGGER_Z)) && (b & PAD_TRIGGER_L))
 		pad_status &= PSX_BUTTON_L1;
 					
-#if TYPE_ANALOG
+#ifdef TYPE_ANALOG
 	//adjust values by 128 cause psx values in range 0-255 where 128 is center position
-	pad->leftJoyX = PAD_StickX(1)+128;				//analog stick
-	pad->leftJoyY = PAD_StickY(1)+128;		
-	pad->rightJoyX = PAD_SubStickX(1)+128;			//C-stick (Left JoyStick)
-	pad->rightJoyY = PAD_SubStickY(1)+128;	
+	pad->leftJoyX  = (u8)(PAD_StickX(1)+128);				//analog stick
+	pad->leftJoyY  = (u8)(PAD_StickY(1)+128);		
+	pad->rightJoyX = (u8)(PAD_SubStickX(1)+128);			//C-stick (Left JoyStick)
+	pad->rightJoyY = (u8)(PAD_SubStickY(1)+128);	
 	pad->controllerType = PSE_PAD_TYPE_ANALOGJOY; 	// Analog Pad  (Right JoyStick)
 #else
 	pad->controllerType = PSE_PAD_TYPE_STANDARD; 	// Standard Pad
