@@ -12,6 +12,8 @@
 #include <errno.h>
 #include <string.h>
 #include <gccore.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "plugins.h"
 #include "PlugCD.h"
 #include "PsxCommon.h"
@@ -74,18 +76,18 @@ long getTD(int track, unsigned char* buffer)
 // opens a binary cd image and calculates its length
 void openBin(const char* filename)
 {
-	long end, size, blocks;
+	long size, blocks;
+	struct stat fileInfo;
 	CD.cd = fopen(filename, "rb");
 		
 	if (CD.cd == 0)
 	{
-		SysPrintf("Error opening cd\r\n");
+		SysPrintf("Error opening cd\n");
+		while(1);
 		return;
 	}
-	
-	end = fseek(CD.cd, 0, SEEK_END);
-	end = ftell(CD.cd);
-	size = end;
+	stat(filename, &fileInfo);
+	size = fileInfo.st_size;
 	SysPrintf("size of CD in MB = %d\r\n",size/1048576);
 	
 	rc = fseek(CD.cd, 0, SEEK_SET);
@@ -231,7 +233,7 @@ long CDR__open(void)
 
 long CDR__init(void) {
 	SysPrintf("start CDR_init()\r\n");
-	strcpy(CDConfiguration.dn, "PSXISOS");
+	strcpy(CDConfiguration.dn, "/PSXISOS");
 	strcpy(CDConfiguration.fn, "GAME.ISO");
 	SysPrintf("end CDR_init()\r\n");
 	return 0;

@@ -61,14 +61,13 @@ static void Initialise (void){
   vmode = VIDEO_GetPreferredMode(NULL);
     
   VIDEO_Configure (vmode);
-  xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf)); //assume PAL largest
-  xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf));	//fixme for progressive?
+  xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode)); //assume PAL largest
+  xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));	//fixme for progressive?
   console_init (xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight,
         vmode->fbWidth * 2);
   VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
   VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
   VIDEO_SetNextFramebuffer (xfb[0]);
-  //VIDEO_SetPostRetraceCallback (PAD_ScanPads);
   VIDEO_SetPostRetraceCallback (ScanPADSandReset);
   VIDEO_SetBlack (0);
   VIDEO_Flush ();
@@ -159,7 +158,6 @@ int main(int argc, char *argv[]) {
 	
 	SysReset();
 	
-	CDR_open();
     SysPrintf("CheckCdrom()\r\n");
 	CheckCdrom();
 	LoadCdrom();
