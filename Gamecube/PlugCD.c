@@ -221,9 +221,10 @@ long CDR__open(void)
 	SysPrintf("start CDR_open()\r\n");
 	
 	// newCD("/cd/cd.bin");
-	strcpy(str, CDConfiguration.dn);
-	strcat(str, "/");
-	strcat(str, CDConfiguration.fn);
+	//strcpy(str, CDConfiguration.dn);
+	//strcat(str, "/");
+	//strcat(str, CDConfiguration.fn);
+	strcpy(str, CDConfiguration.fn);
 	
 	newCD(str);
 	
@@ -231,10 +232,14 @@ long CDR__open(void)
 	return 0;
 }
 
+char* textFileBrowser(char*);
 long CDR__init(void) {
 	SysPrintf("start CDR_init()\r\n");
-	strcpy(CDConfiguration.dn, "/PSXISOS");
-	strcpy(CDConfiguration.fn, "GAME.ISO");
+	//strcpy(CDConfiguration.dn, "/PSXISOS");
+	//strcpy(CDConfiguration.fn, "GAME.ISO");
+	char* filename = textFileBrowser("/PSXISOS");
+	strcpy(CDConfiguration.fn, filename);
+	free(filename);
 	SysPrintf("end CDR_init()\r\n");
 	return 0;
 }
