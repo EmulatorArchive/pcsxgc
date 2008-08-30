@@ -412,11 +412,13 @@ static void ReleaseArgs()
 }
 
 
+#if 0
 // Saves current mappings for later
 static HWRegister Saved_HWRegisters[NUM_HW_REGISTERS];
 static int Saved_HWRegUseCount;
 static int Saved_DstCPUReg;
 static int Saved_UniqueRegAlloc;
+
 static void SaveRegisterState()
 {
 	memcpy(Saved_HWRegisters, HWRegisters, sizeof(HWRegisters));
@@ -429,6 +431,7 @@ static void RestoreRegisterState()
 {
 	
 }
+#endif
 
 /* --- Psx register mapping --- */
 
@@ -1039,7 +1042,7 @@ static void iBranch(u32 branchPC, int savectx) {
 	}
 }
 
-
+#if 0
 static void iDumpRegs() {
 	int i, j;
 
@@ -1050,6 +1053,7 @@ static void iDumpRegs() {
 		printf("\n");
 	}
 }
+#endif
 
 void iDumpBlock(char *ptr) {/*
 	FILE *f;
@@ -2093,7 +2097,7 @@ static void recLHU() {
 
 static void recLW() {
 // Rt = mem[Rs + Im] (unsigned)
-	u32 *b1, *b2;
+//	u32 *b1, *b2;
 
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -2505,7 +2509,7 @@ static void recSH() {
 
 static void recSW() {
 // mem[Rs + Im] = Rt
-	u32 *b1, *b2;
+//	u32 *b1, *b2;
 #if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -3537,7 +3541,7 @@ static void recRecompile() {
 	iRet();
 
 done:
-	if (dump) iDumpBlock(ptr);
+	if (dump) iDumpBlock((char*)ptr);
 	//MakeDataExecutable(ptr, ((u8*)ppcPtr)-((u8*)ptr));
 	//msync((void *)((int)ptr & ~4095), ((int)ppcPtr / 4096)-((int)ptr / 4069) + 1, MS_INVALIDATE);
 	
@@ -3548,7 +3552,7 @@ done:
 
 #ifdef FAST_DYNA_MEM	
 	{
-		u8 *addr; int i;
+		u8 *addr; //int i;
 		pcold &= ~4095;
 		pc &= ~4095;
 		

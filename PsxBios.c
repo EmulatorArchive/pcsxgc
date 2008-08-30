@@ -1187,7 +1187,7 @@ void psxBios_HookEntryInt() { // 19
 	PSXBIOS_LOG("psxBios_%s\n", biosB0n[0x19]);
 #endif
 
-	jmp_int = (u32*)Ra0;
+	jmp_int = (unsigned long*)Ra0;
 	pc0 = ra;
 }
 
@@ -2145,7 +2145,7 @@ void psxBiosInit() {
 	psxMu32ref(0x0150) = SWAPu32(0x160);
 	psxMu32ref(0x0154) = SWAPu32(0x320);
 	psxMu32ref(0x0160) = SWAPu32(0x248);
-	strcpy(&psxM[0x248], "bu");
+	strcpy((char*)&psxM[0x248], "bu");
 /*	psxMu32ref(0x0ca8) = SWAPu32(0x1f410004);
 	psxMu32ref(0x0cf0) = SWAPu32(0x3c020000);
 	psxMu32ref(0x0cf4) = SWAPu32(0x2442641c);
@@ -2371,7 +2371,7 @@ void psxBiosException() {
 	base+=size;
 
 #define bfreezes(ptr) bfreeze(ptr, sizeof(ptr))
-#define bfreezel(ptr) {*ptr=SWAP32p(ptr); bfreeze(ptr, 4); *ptr=SWAP32p(ptr);}
+#define bfreezel(ptr) {*ptr=SWAP32p((void*)ptr); bfreeze(ptr, 4); *ptr=SWAP32p((void*)ptr);}
 
 #define bfreezepsxMptr(ptr) \
 	if (Mode == 1) { \
@@ -2396,8 +2396,8 @@ static void biosSwap()
 	}
 	
 	for (i=0; i<sizeof(Thread)/sizeof(TCB); i++) {
-		Thread[i].status = SWAP32p(&Thread[i].status);
-		Thread[i].mode = SWAP32p(&Thread[i].mode);
+		Thread[i].status = SWAP32p((u32*)&Thread[i].status);
+		Thread[i].mode = SWAP32p((u32*)&Thread[i].mode);
 		Thread[i].func = SWAP32p(&Thread[i].func);
 		
 		for (j=0; j<32; j++) {

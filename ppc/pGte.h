@@ -27,7 +27,7 @@ static void rec##f() { \
 	STW(0, OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
 	FlushAllHWReg(); \
 	CALLFunc ((u32)gte##f); \
-	cop2readypc = pc + psxCP2time[_fFunct_(psxRegs.code)]<<2; \
+	cop2readypc = (pc + psxCP2time[_fFunct_(psxRegs.code)])<<2; \
 }
 
 #define CP2_FUNCNC(f) \

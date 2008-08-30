@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 	strcpy(Config.BiosDir, "PSXISOS/");
 	strcpy(Config.Net,"Disabled");
 
-	Config.Cpu = 1;	//interpreter
+	Config.Cpu = 1;	//interpreter = 1, dynarec = 0
 	Config.CpuBias = 2; //for 50/60fps
 	Config.PsxOut = 1;
 	Config.HLE = 0;

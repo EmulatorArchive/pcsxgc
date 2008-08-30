@@ -82,7 +82,7 @@ extern s8 *psxP;
 
 extern s8 *psxR;
 #define psxRs8(mem)		psxR[(mem) & 0x7ffff]
-#define psxRs16(mem)	((s16)SWAP16p((s16*)&psxR[(mem) & 0x7ffff]))
+#define psxRs16(mem)	((s16)SWAP16p((u16*)&psxR[(mem) & 0x7ffff]))
 #define psxRs32(mem)	((s32)SWAP32p((s32*)&psxR[(mem) & 0x7ffff]))
 #define psxRu8(mem)		(*(u8* )&psxR[(mem) & 0x7ffff])
 #define psxRu16(mem)	(SWAP16p((u16*)&psxR[(mem) & 0x7ffff]))
