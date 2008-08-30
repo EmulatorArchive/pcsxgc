@@ -142,7 +142,7 @@ int GetCdromFile(u8 *mdir, u8 *time, s8 *filename) {
 		i += dir->length[0];
 
 		if (dir->flags[0] & 0x2) { // it's a dir
-			if (!strnicmp((char*)&dir->name[0], filename, dir->name_len[0])) {
+			if (!strnicmp((char*)&dir->name[0], (char*)filename, dir->name_len[0])) {
 				if (filename[dir->name_len[0]] != '\\') continue;
 				
 				filename+= dir->name_len[0] + 1;
@@ -150,10 +150,10 @@ int GetCdromFile(u8 *mdir, u8 *time, s8 *filename) {
 				mmssdd(dir->extent, (char*)time);
 				READDIR(ddir);
 				//i = 0;
-				return GetCdromFile(ddir, time, filename);
+				return GetCdromFile((u8*)ddir, time, filename);
 			}
 		} else {
-			if (!strnicmp((char*)&dir->name[0], filename, strlen(filename))) {
+			if (!strnicmp((char*)&dir->name[0], (char*)filename, strlen((char*)filename))) {
 				mmssdd(dir->extent, (char*)time);
 				break;
 			}
@@ -186,8 +186,8 @@ int LoadCdrom() {
 
 	READDIR(mdir);
 
-	if (GetCdromFile(mdir, time, "SYSTEM.CNF;1") == -1) {
-		if (GetCdromFile(mdir, time, "PSX.EXE;1") == -1) return -1;
+	if (GetCdromFile(mdir, time, (s8*)"SYSTEM.CNF;1") == -1) {
+		if (GetCdromFile(mdir, time, (s8*)"PSX.EXE;1") == -1) return -1;
 
 		READTRACK();
 	}
@@ -198,14 +198,14 @@ int LoadCdrom() {
 		if (GetCdromFile(mdir, time, exename) == -1) {
 			sscanf((char*)buf+12, "BOOT = cdrom:%s", exename);
 			if (GetCdromFile(mdir, time, exename) == -1) {
-				char *ptr = strstr(buf+12, "cdrom:");
+				char *ptr = strstr((char*)buf+12, "cdrom:");
 				if (!ptr)
 					return -1;
 				for (i=0; i<32; i++) {
 					if (ptr[i] == ' ') continue;
 					if (ptr[i] == '\\') continue;
 				}
-				strncpy(exename, ptr, 255);
+				strncpy((char*)exename, ptr, 255);
 				if (GetCdromFile(mdir, time, exename) == -1)
 					return -1;
 			}
@@ -255,7 +255,7 @@ int LoadCdromFile(char *filename, EXE_HEADER *head) {
 
 	READDIR(mdir);
 
-	if (GetCdromFile(mdir, time, exename) == -1) return -1;
+	if (GetCdromFile(mdir, time, (s8*)exename) == -1) return -1;
 
 	READTRACK();
 
@@ -287,7 +287,7 @@ int CheckCdrom() {
 
 	READTRACK();
 
-	strncpy(CdromLabel, buf+52, 11);
+	strncpy(CdromLabel, (char*)buf+52, 11);
 
 	// skip head and sub, and go to the root directory record
 	dir = (struct iso_directory_record*) &buf[12+156]; 
@@ -296,14 +296,14 @@ int CheckCdrom() {
 
 	READDIR(mdir);
 
-	if (GetCdromFile(mdir, time, "SYSTEM.CNF;1") != -1) {
+	if (GetCdromFile(mdir, time, (s8*)"SYSTEM.CNF;1") != -1) {
 		READTRACK();
 
 		sscanf((char*)buf+12, "BOOT = cdrom:\\%s", exename);
-		if (GetCdromFile(mdir, time, exename) == -1) {
+		if (GetCdromFile(mdir, time, (s8*)exename) == -1) {
 			sscanf((char*)buf+12, "BOOT = cdrom:%s", exename);
-			if (GetCdromFile(mdir, time, exename) == -1) {
-				char *ptr = strstr(buf+12, "cdrom:");
+			if (GetCdromFile(mdir, time, (s8*)exename) == -1) {
+				char *ptr = strstr((char*)buf+12, "cdrom:");
 				if (!ptr)
 					return -1;
 				for (i=0; i<32; i++) {
@@ -311,7 +311,7 @@ int CheckCdrom() {
 					if (ptr[i] == '\\') continue;
 				}
 				strncpy(exename, ptr, 255);
-				if (GetCdromFile(mdir, time, exename) == -1)
+				if (GetCdromFile(mdir, time, (s8*)exename) == -1)
 					return 0;
 			}
 		}
@@ -365,7 +365,7 @@ static int PSXGetFileType(FILE *f) {
     if (mybuf[0]=='C' && mybuf[1]=='P' && mybuf[2]=='E')
         return CPE_EXE;
 
-    coff_hdr = (FILHDR *)mybuf;
+    coff_hdr = (void *)mybuf;
     if (coff_hdr->f_magic == SWAP16(0x0162))
         return COFF_EXE;
 
@@ -441,13 +441,13 @@ int SaveState(const char *file) {
 		psxRegisters tmpRegs;
 
 		for (i=0; i<sizeof(psxGPRRegs)/4; i++)
-			tmpRegs.GPR.r[i] = SWAP32p(&psxRegs.GPR.r[i]);
+			tmpRegs.GPR.r[i] = SWAP32p((u32*)&psxRegs.GPR.r[i]);
 		for (i=0; i<sizeof(psxCP0Regs)/4; i++)
-			tmpRegs.CP0.r[i] = SWAP32p(&psxRegs.CP0.r[i]);
+			tmpRegs.CP0.r[i] = SWAP32p((u32*)&psxRegs.CP0.r[i]);
 		for (i=0; i<sizeof(psxCP2Data)/4; i++)
-			tmpRegs.CP2D.r[i] = SWAP32p(&psxRegs.CP2D.r[i]);
+			tmpRegs.CP2D.r[i] = SWAP32p((u32*)&psxRegs.CP2D.r[i]);
 		for (i=0; i<sizeof(psxCP2Ctrl)/4; i++)
-			tmpRegs.CP2C.r[i] = SWAP32p(&psxRegs.CP2C.r[i]);
+			tmpRegs.CP2C.r[i] = SWAP32p((u32*)&psxRegs.CP2C.r[i]);
 		tmpRegs.pc = SWAP32p(&psxRegs.pc);
 		tmpRegs.code = SWAP32p(&psxRegs.code);
 		tmpRegs.cycle = SWAP32(psxCurrentCycle);
@@ -465,8 +465,8 @@ int SaveState(const char *file) {
 	gpufP->ulFreezeVersion = 1;
 	GPU_freeze(1, gpufP);
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
-	gpufP->ulFreezeVersion = SWAP32p(&gpufP->ulFreezeVersion);
-	gpufP->ulStatus = SWAP32p(&gpufP->ulStatus);
+	gpufP->ulFreezeVersion = SWAP32p((void*)&gpufP->ulFreezeVersion);
+	gpufP->ulStatus = SWAP32p((void*)&gpufP->ulStatus);
 	//for (i=0; i<256; i++)
 	//	gpufP->ulControl[i] = SWAP32p(&gpufP->ulControl[i]);
 #endif
@@ -478,31 +478,31 @@ int SaveState(const char *file) {
 	SPU_freeze(2, spufP);
 	Size = spufP->Size;
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
-	spufP->Size = SWAP32p(&spufP->Size);
+	spufP->Size = SWAP32p((void*)&spufP->Size);
 #endif
 	gzwrite(f, &spufP->Size, 4);
 	free(spufP);
 	spufP = (SPUFreeze_t *) malloc(Size);
 	SPU_freeze(1, spufP);
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
-	spufP->PluginVersion = SWAP32p(&spufP->PluginVersion);
-	spufP->Size = SWAP32p(&spufP->Size);
+	spufP->PluginVersion = SWAP32p((void*)&spufP->PluginVersion);
+	spufP->Size = SWAP32p((void*)&spufP->Size);
 	
 	{
 		xa_decode_t tmpXa;
 		memcpy(&tmpXa, &spufP->xa, sizeof(xa_decode_t));
 		spufP->xa = tmpXa;
 		
-		spufP->xa.freq = SWAP32p((long *)&spufP->xa.freq);
-		spufP->xa.nbits = SWAP32p((long *)&spufP->xa.nbits);
-		spufP->xa.stereo = SWAP32p((long *)&spufP->xa.stereo);
-		spufP->xa.nsamples = SWAP32p((long *)&spufP->xa.nsamples);
-		spufP->xa.left.y0 = SWAP32p(&spufP->xa.left.y0);
-		spufP->xa.left.y1 = SWAP32p(&spufP->xa.left.y1);
-		spufP->xa.right.y0 = SWAP32p(&spufP->xa.right.y0);
-		spufP->xa.right.y1 = SWAP32p(&spufP->xa.right.y1);
+		spufP->xa.freq = SWAP32p((u32*)&spufP->xa.freq);
+		spufP->xa.nbits = SWAP32p((u32*)&spufP->xa.nbits);
+		spufP->xa.stereo = SWAP32p((u32*)&spufP->xa.stereo);
+		spufP->xa.nsamples = SWAP32p((u32*)&spufP->xa.nsamples);
+		spufP->xa.left.y0 = SWAP32p((void*)&spufP->xa.left.y0);
+		spufP->xa.left.y1 = SWAP32p((void*)&spufP->xa.left.y1);
+		spufP->xa.right.y0 = SWAP32p((void*)&spufP->xa.right.y0);
+		spufP->xa.right.y1 = SWAP32p((void*)&spufP->xa.right.y1);
 		for (i=0; i<16384; i++)
-			spufP->xa.pcm[i] = SWAP16p(&spufP->xa.pcm[i]);
+			spufP->xa.pcm[i] = SWAP16p((void*)&spufP->xa.pcm[i]);
 	}
 #endif
 	gzwrite(f, spufP, Size);
@@ -548,16 +548,16 @@ int LoadState(const char *file) {
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
 	{
 		for (i=0; i<sizeof(psxGPRRegs)/4; i++)
-			psxRegs.GPR.r[i] = SWAP32p(&psxRegs.GPR.r[i]);
+			psxRegs.GPR.r[i] = SWAP32p((u32*)&psxRegs.GPR.r[i]);
 		for (i=0; i<sizeof(psxCP0Regs)/4; i++)
-			psxRegs.CP0.r[i] = SWAP32p(&psxRegs.CP0.r[i]);
+			psxRegs.CP0.r[i] = SWAP32p((u32*)&psxRegs.CP0.r[i]);
 		for (i=0; i<sizeof(psxCP2Data)/4; i++)
-			psxRegs.CP2D.r[i] = SWAP32p(&psxRegs.CP2D.r[i]);
+			psxRegs.CP2D.r[i] = SWAP32p((u32*)&psxRegs.CP2D.r[i]);
 		for (i=0; i<sizeof(psxCP2Ctrl)/4; i++)
-			psxRegs.CP2C.r[i] = SWAP32p(&psxRegs.CP2C.r[i]);
+			psxRegs.CP2C.r[i] = SWAP32p((u32*)&psxRegs.CP2C.r[i]);
 		psxRegs.pc = SWAP32p(&psxRegs.pc);
 		psxRegs.code = SWAP32p(&psxRegs.code);
-		psxRegs.cycle = SWAP32p(&psxRegs.cycle);
+		psxRegs.cycle = SWAP32p((u32*)&psxRegs.cycle);
 		psxRegs.interrupt = SWAP32p(&psxRegs.interrupt);
 		for (i=0; i<32; i++)
 			psxRegs.intCycle[i] = SWAP32p(&psxRegs.intCycle[i]);
@@ -568,8 +568,8 @@ int LoadState(const char *file) {
 	gpufP = (GPUFreeze_t *) malloc (sizeof(GPUFreeze_t));
 	gzread(f, gpufP, sizeof(GPUFreeze_t));
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
-	gpufP->ulFreezeVersion = SWAP32p(&gpufP->ulFreezeVersion);
-	gpufP->ulStatus = SWAP32p(&gpufP->ulStatus);
+	gpufP->ulFreezeVersion = SWAP32p((void*)&gpufP->ulFreezeVersion);
+	gpufP->ulStatus = SWAP32p((void*)&gpufP->ulStatus);
 	//for (i=0; i<256; i++)
 	//	gpufP->ulControl[i] = SWAP32p(&gpufP->ulControl[i]);
 #endif
@@ -584,24 +584,24 @@ int LoadState(const char *file) {
 	spufP = (SPUFreeze_t *) malloc (Size);
 	gzread(f, spufP, Size);
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
-	spufP->PluginVersion = SWAP32p(&spufP->PluginVersion);
-	spufP->Size = SWAP32p(&spufP->Size);
+	spufP->PluginVersion = SWAP32p((void*)&spufP->PluginVersion);
+	spufP->Size = SWAP32p((void*)&spufP->Size);
 	
 	{
 		xa_decode_t tmpXa;
 		memcpy(&tmpXa, &spufP->xa, sizeof(xa_decode_t));
 		spufP->xa = tmpXa;
 		
-		spufP->xa.freq = SWAP32p((long *)&spufP->xa.freq);
-		spufP->xa.nbits = SWAP32p((long *)&spufP->xa.nbits);
-		spufP->xa.stereo = SWAP32p((long *)&spufP->xa.stereo);
-		spufP->xa.nsamples = SWAP32p((long *)&spufP->xa.nsamples);
-		spufP->xa.left.y0 = SWAP32p(&spufP->xa.left.y0);
-		spufP->xa.left.y1 = SWAP32p(&spufP->xa.left.y1);
-		spufP->xa.right.y0 = SWAP32p(&spufP->xa.right.y0);
-		spufP->xa.right.y1 = SWAP32p(&spufP->xa.right.y1);
+		spufP->xa.freq = SWAP32p((u32*)&spufP->xa.freq);
+		spufP->xa.nbits = SWAP32p((u32*)&spufP->xa.nbits);
+		spufP->xa.stereo = SWAP32p((u32*)&spufP->xa.stereo);
+		spufP->xa.nsamples = SWAP32p((u32*)&spufP->xa.nsamples);
+		spufP->xa.left.y0 = SWAP32p((void*)&spufP->xa.left.y0);
+		spufP->xa.left.y1 = SWAP32p((void*)&spufP->xa.left.y1);
+		spufP->xa.right.y0 = SWAP32p((void*)&spufP->xa.right.y0);
+		spufP->xa.right.y1 = SWAP32p((void*)&spufP->xa.right.y1);
 		for (i=0; i<16384; i++)
-			spufP->xa.pcm[i] = SWAP16p(&spufP->xa.pcm[i]);
+			spufP->xa.pcm[i] = SWAP16p((void*)&spufP->xa.pcm[i]);
 	}
 #endif
 	SPU_freeze(0, spufP);

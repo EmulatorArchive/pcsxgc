@@ -174,6 +174,7 @@ extern int NetOpened;
 #include "Debug.h"
 #include "Gte.h"
 extern void SysPrintf(char *fmt, ...);
+extern void SysMessage(char *fmt, ...);
 extern void SysReset();
 extern void *SysLoadLibrary(char *lib);
 extern void *SysLoadSym(void *lib, char *sym);

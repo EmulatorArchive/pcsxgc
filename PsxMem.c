@@ -19,7 +19,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <sys/mman.h>
+//#include <sys/mman.h>
 
 #include "PsxCommon.h"
 
@@ -34,15 +34,15 @@ u32 *psxMemRLUT;
 int psxMemInit() {
 	int i;
 
-	psxMemRLUT = (long*)malloc(0x10000 * 4);
-	psxMemWLUT = (long*)malloc(0x10000 * 4);
+	psxMemRLUT = (u32*)malloc(0x10000 * 4);
+	psxMemWLUT = (u32*)malloc(0x10000 * 4);
 	memset(psxMemRLUT, 0, 0x10000 * 4);
 	memset(psxMemWLUT, 0, 0x10000 * 4);
 
-	psxM = (char*)malloc(0x00200000);
-	psxP = (char*)malloc(0x00010000);
-	psxH = (char*)malloc(0x00010000);
-	psxR = (char*)malloc(0x00080000);
+	psxM = (s8*)malloc(0x00200000);
+	psxP = (s8*)malloc(0x00010000);
+	psxH = (s8*)malloc(0x00010000);
+	psxR = (s8*)malloc(0x00080000);
 	if (psxMemRLUT == NULL || psxMemWLUT == NULL || 
 		psxM == NULL || psxP == NULL || psxH == NULL) {
 		SysMessage(_("Error allocating memory")); return -1;

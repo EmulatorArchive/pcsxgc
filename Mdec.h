@@ -22,8 +22,8 @@
 void mdecInit();
 __inline void mdecWrite0(u32 data);
 __inline void mdecWrite1(u32 data);
-__inline u32  mdecRead0() __attribute__ ((__pure__));
-__inline u32  mdecRead1() __attribute__ ((__pure__));
+__inline u32  mdecRead0();// __attribute__ ((__pure__));
+__inline u32  mdecRead1();// __attribute__ ((__pure__));
 void psxDma0(u32 madr, u32 bcr, u32 chcr);
 void psxDma1(u32 madr, u32 bcr, u32 chcr);
 void mdec1Interrupt();

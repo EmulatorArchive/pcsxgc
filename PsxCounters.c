@@ -241,13 +241,13 @@ static void rcntSwap()
 	int i;
 	
 	for (i=0; i<5; i++) {
-		psxCounters[i].count = SWAP32p(&psxCounters[i].count);
-		psxCounters[i].mode = SWAP32p(&psxCounters[i].mode);
-		psxCounters[i].target = SWAP32p(&psxCounters[i].target);
-		psxCounters[i].sCycle = SWAP32p(&psxCounters[i].sCycle);
-		psxCounters[i].Cycle = SWAP32p(&psxCounters[i].Cycle);
-		psxCounters[i].rate = SWAP32p(&psxCounters[i].rate);
-		psxCounters[i].interrupt = SWAP32p(&psxCounters[i].interrupt);
+		psxCounters[i].count = SWAP32p((void *)&psxCounters[i].count);
+		psxCounters[i].mode = SWAP32p((void *)&psxCounters[i].mode);
+		psxCounters[i].target = SWAP32p((void *)&psxCounters[i].target);
+		psxCounters[i].sCycle = SWAP32p((void *)&psxCounters[i].sCycle);
+		psxCounters[i].Cycle = SWAP32p((void *)&psxCounters[i].Cycle);
+		psxCounters[i].rate = SWAP32p((void *)&psxCounters[i].rate);
+		psxCounters[i].interrupt = SWAP32p((void *)&psxCounters[i].interrupt);
 	}
 }
 

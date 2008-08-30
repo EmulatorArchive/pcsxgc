@@ -196,7 +196,7 @@ static const int useCP2BSC[32] = {
         REGUSE_NONE
 };
 
-static int getRegUse(u32 code) __attribute__ ((__pure__));
+//static int getRegUse(u32 code) __attribute__ ((__pure__));
 static int getRegUse(u32 code)
 {
     int use = useBSC[code>>26];
@@ -269,7 +269,7 @@ int useOfPsxReg(u32 code, int use, int psxreg)
 
 //#define NOREGUSE_FOLLOW
 
-static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr) __attribute__ ((__pure__, __unused__));
+//static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr) __attribute__ ((__pure__, __unused__));
 static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr)
 {
     u32 *ptr, code, bPC = 0;

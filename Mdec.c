@@ -524,13 +524,13 @@ static void mdecSwap()
 {
 	int i;
 
-	mdec.command = SWAP32p(&mdec.command);
-	mdec.status = SWAP32p(&mdec.status);
-	mdec.rl = (short *)SWAP32p((long *)&mdec.rl);
-	mdec.rlsize = SWAP32p(&mdec.rlsize);
+	mdec.command = SWAP32p((void *)&mdec.command);
+	mdec.status = SWAP32p((void *)&mdec.status);
+	mdec.rl = (unsigned short *)SWAP32p((void *)&mdec.rl);
+	mdec.rlsize = SWAP32p((void *)&mdec.rlsize);
 	for (i=0; i<DCTSIZE2; i++) {
-		iq_y[i] = SWAP32p(&iq_y[i]);
-		iq_uv[i] = SWAP32p(&iq_uv[i]);
+		iq_y[i] = SWAP32p((u32 *)&iq_y[i]);
+		iq_uv[i] = SWAP32p((u32 *)&iq_uv[i]);
 	}
 }
 

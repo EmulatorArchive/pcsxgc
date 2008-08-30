@@ -1060,25 +1060,25 @@ void cdrReset() {
 
 static void cdrSwap()
 {
-	cdr.Reading = SWAP32p(&cdr.Reading);
-	cdr.Play = SWAP32p(&cdr.Play);
-	cdr.CurTrack = SWAP32p(&cdr.CurTrack);
-	cdr.Mode = SWAP32p(&cdr.Mode);
-	cdr.File = SWAP32p(&cdr.File);
-	cdr.Channel = SWAP32p(&cdr.Channel);
-	cdr.Muted = SWAP32p(&cdr.Muted);
-	cdr.Reset = SWAP32p(&cdr.Reset);
-	cdr.RErr = SWAP32p(&cdr.RErr);
-	cdr.FirstSector = SWAP32p(&cdr.FirstSector);
+	cdr.Reading = SWAP32p((void*)&cdr.Reading);
+	cdr.Play = SWAP32p((void*)&cdr.Play);
+	cdr.CurTrack = SWAP32p((void*)&cdr.CurTrack);
+	cdr.Mode = SWAP32p((void*)&cdr.Mode);
+	cdr.File = SWAP32p((void*)&cdr.File);
+	cdr.Channel = SWAP32p((void*)&cdr.Channel);
+	cdr.Muted = SWAP32p((void*)&cdr.Muted);
+	cdr.Reset = SWAP32p((void*)&cdr.Reset);
+	cdr.RErr = SWAP32p((void*)&cdr.RErr);
+	cdr.FirstSector = SWAP32p((void*)&cdr.FirstSector);
 
-	cdr.Xa.left.y0 = SWAP32p(&cdr.Xa.left.y0);
-	cdr.Xa.left.y1 = SWAP32p(&cdr.Xa.left.y1);
-	cdr.Xa.right.y0 = SWAP32p(&cdr.Xa.right.y0);
-	cdr.Xa.right.y1 = SWAP32p(&cdr.Xa.right.y1);
+	cdr.Xa.left.y0 = SWAP32p((void*)&cdr.Xa.left.y0);
+	cdr.Xa.left.y1 = SWAP32p((void*)&cdr.Xa.left.y1);
+	cdr.Xa.right.y0 = SWAP32p((void*)&cdr.Xa.right.y0);
+	cdr.Xa.right.y1 = SWAP32p((void*)&cdr.Xa.right.y1);
 
-	cdr.Init = SWAP32p(&cdr.Init);
-	cdr.eCycle = SWAP32p(&cdr.eCycle);
-	cdr.Seeked = SWAP32p(&cdr.Seeked);
+	cdr.Init = SWAP32p((void*)&cdr.Init);
+	cdr.eCycle = SWAP32p((void*)&cdr.eCycle);
+	cdr.Seeked = SWAP32p((void*)&cdr.Seeked);
 }
 
 int cdrFreeze(gzFile f, int Mode) {
@@ -1090,7 +1090,7 @@ int cdrFreeze(gzFile f, int Mode) {
 
 	if (Mode == 1) tmp = SWAP32(cdr.pTransfer - cdr.Transfer);
 	gzfreezel(&tmp);
-	if (Mode == 0) cdr.pTransfer = cdr.Transfer + (long)SWAP32p(&tmp);
+	if (Mode == 0) cdr.pTransfer = cdr.Transfer + (long)SWAP32p((void*)&tmp);
 
 	return 0;
 }

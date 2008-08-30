@@ -2378,7 +2378,7 @@ void psxBiosException() {
 		if (ptr) psxRu32ref(base) = SWAPu32((u32)ptr - (u32)psxM); \
 		else psxRu32ref(base) = 0; \
 	} else { \
-		if (psxRu32(base)) *(u8*)ptr = (u8*)(psxM + psxRu32(base)); \
+		if (psxRu32(base)) *(u8**)&ptr = (u8*)(psxM + psxRu32(base)); \
 		else ptr = NULL; \
 	} \
 	base+=4;

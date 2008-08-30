@@ -543,10 +543,10 @@ void GetMcdBlockInfo(int mcd, int block, McdBlock *Info) {
 
 	memset(Info, 0, sizeof(McdBlock));
 
-	str = Info->Title;
+	str = (unsigned char*) Info->Title;
 
-	if (mcd == 1) data = Mcd1Data;
-	if (mcd == 2) data = Mcd2Data;
+	if (mcd == 1) data = (unsigned char*) Mcd1Data;
+	if (mcd == 2) data = (unsigned char*) Mcd2Data;
 
 	ptr = data + block * 8192 + 2;
 
@@ -607,10 +607,10 @@ void GetMcdBlockInfo(int mcd, int block, McdBlock *Info) {
 	Info->Flags = *ptr;
 
 	ptr+= 0xa;
-	strncpy(Info->ID, ptr, 12);
+	strncpy(Info->ID, (char*)ptr, 12);
 	Info->ID[12] = 0;
 	ptr+= 12;
-	strcpy(Info->Name, ptr);
+	strcpy(Info->Name, (char*)ptr);
 }
 
 int sioFreeze(gzFile f, int Mode) {

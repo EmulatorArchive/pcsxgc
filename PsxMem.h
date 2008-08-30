@@ -136,13 +136,13 @@ int  psxMemInit();
 void psxMemReset();
 void psxMemShutdown();
 
-u8   psxMemRead8 (u32 mem) __attribute__ ((__pure__));
-u16  psxMemRead16(u32 mem) __attribute__ ((__pure__));
-u32  psxMemRead32(u32 mem) __attribute__ ((__pure__));
+u8   psxMemRead8 (u32 mem);// __attribute__ ((__pure__));
+u16  psxMemRead16(u32 mem);// __attribute__ ((__pure__));
+u32  psxMemRead32(u32 mem);// __attribute__ ((__pure__));
 void psxMemWrite8 (u32 mem, u8 value);
 void psxMemWrite16(u32 mem, u16 value);
 void psxMemWrite32(u32 mem, u32 value);
-void *psxMemPointer(u32 mem) __attribute__ ((__pure__));
+void *psxMemPointer(u32 mem);// __attribute__ ((__pure__));
 
 #endif /* __PSXMEMORY_H__ */
 
