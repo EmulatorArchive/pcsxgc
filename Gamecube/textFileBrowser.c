@@ -77,7 +77,7 @@ char* textFileBrowser(char* directory){
 			if(dir[currentSelection].attr & S_IFDIR){
 				char newDir[MAXPATHLEN];
 				sprintf(newDir, "%s/%s", directory, dir[currentSelection].name);
-				if(dir) free(dir);
+				free(dir);
 				CLEAR();
 				sprintf(buffer,"MOVING TO %s.\nPress B to continue.\n",newDir);
 				PRINT(buffer);
@@ -86,7 +86,7 @@ char* textFileBrowser(char* directory){
 			} else {
 				char* newDir = malloc(MAXPATHLEN);
 				sprintf(newDir, "%s/%s", directory, dir[currentSelection].name);
-				if(dir) free(dir);
+				free(dir);
 				CLEAR();
 				sprintf(buffer,"SELECTING %s.\nPress B to continue.\n",newDir);
 				PRINT(buffer);
