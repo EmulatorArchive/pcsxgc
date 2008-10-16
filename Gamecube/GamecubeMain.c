@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 	/* Configure pcsx */
 	memset(&Config, 0, sizeof(PcsxConfig));
 	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
-	strcpy(Config.BiosDir, "PSXISOS/");
+	strcpy(Config.BiosDir, "/PSXISOS/");
 	strcpy(Config.Net,"Disabled");
 
 	Config.Cpu = 1;	//interpreter = 1, dynarec = 0

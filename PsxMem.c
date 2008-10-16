@@ -23,30 +23,18 @@
 
 #include "PsxCommon.h"
 
-s8 *psxM;
-s8 *psxP;
-s8 *psxR;
-s8 *psxH;
-u32 *psxMemWLUT;
-u32 *psxMemRLUT;
+s8 psxM[0x200000];
+s8 psxP[0x010000];
+s8 psxR[0x080000];
+s8 psxH[0x010000];
+u32 psxMemWLUT[0x10000];
+u32 psxMemRLUT[0x10000];
 
 
 int psxMemInit() {
 	int i;
-
-	psxMemRLUT = (u32*)malloc(0x10000 * 4);
-	psxMemWLUT = (u32*)malloc(0x10000 * 4);
-	memset(psxMemRLUT, 0, 0x10000 * 4);
-	memset(psxMemWLUT, 0, 0x10000 * 4);
-
-	psxM = (s8*)malloc(0x00200000);
-	psxP = (s8*)malloc(0x00010000);
-	psxH = (s8*)malloc(0x00010000);
-	psxR = (s8*)malloc(0x00080000);
-	if (psxMemRLUT == NULL || psxMemWLUT == NULL || 
-		psxM == NULL || psxP == NULL || psxH == NULL) {
-		SysMessage(_("Error allocating memory")); return -1;
-	}
+	memset(psxMemWLUT,0,sizeof(psxMemWLUT));
+	memset(psxMemRLUT,0,sizeof(psxMemRLUT));
 
 // MemR
 	for (i=0; i<0x80; i++) psxMemRLUT[i + 0x0000] = (u32)&psxM[(i & 0x1f) << 16];
@@ -96,12 +84,7 @@ void psxMemReset() {
 }
 
 void psxMemShutdown() {
-	free(psxM);
-	free(psxP);
-	free(psxH);
-	free(psxR);
-	free(psxMemRLUT);
-	free(psxMemWLUT);
+
 }
 
 static int writeok=1;

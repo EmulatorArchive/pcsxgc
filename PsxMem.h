@@ -19,6 +19,13 @@
 #ifndef __PSXMEMORY_H__
 #define __PSXMEMORY_H__
 
+extern s8 psxM[0x200000];
+extern s8 psxP[0x010000];
+extern s8 psxR[0x080000];
+extern s8 psxH[0x010000];
+extern u32 psxMemWLUT[0x10000];
+extern u32 psxMemRLUT[0x10000];
+
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
 /*
 #define _SWAP16(b) ((((unsigned char*)&(b))[0]&0xff) | (((unsigned char*)&(b))[1]&0xff)<<8)
@@ -50,7 +57,6 @@
 
 #endif
 
-extern s8 *psxM;
 #define psxMs8(mem)		psxM[(mem) & 0x1fffff]
 #define psxMs16(mem)	((s16)SWAP16p((s16*)&psxM[(mem) & 0x1fffff]))
 #define psxMs32(mem)	((s32)SWAP32p((s32*)&psxM[(mem) & 0x1fffff]))
@@ -65,7 +71,6 @@ extern s8 *psxM;
 #define psxMu16ref(mem)	(*(u16*)&psxM[(mem) & 0x1fffff])
 #define psxMu32ref(mem)	(*(u32*)&psxM[(mem) & 0x1fffff])
 
-extern s8 *psxP;
 #define psxPs8(mem)	    psxP[(mem) & 0xffff]
 #define psxPs16(mem)	((s16)SWAP16p((s16*)&psxP[(mem) & 0xffff]))
 #define psxPs32(mem)	((s32)SWAP32p((s32*)&psxP[(mem) & 0xffff]))
@@ -80,7 +85,6 @@ extern s8 *psxP;
 #define psxPu16ref(mem)	(*(u16*)&psxP[(mem) & 0xffff])
 #define psxPu32ref(mem)	(*(u32*)&psxP[(mem) & 0xffff])
 
-extern s8 *psxR;
 #define psxRs8(mem)		psxR[(mem) & 0x7ffff]
 #define psxRs16(mem)	((s16)SWAP16p((u16*)&psxR[(mem) & 0x7ffff]))
 #define psxRs32(mem)	((s32)SWAP32p((s32*)&psxR[(mem) & 0x7ffff]))
@@ -95,7 +99,6 @@ extern s8 *psxR;
 #define psxRu16ref(mem)	(*(u16*)&psxR[(mem) & 0x7ffff])
 #define psxRu32ref(mem)	(*(u32*)&psxR[(mem) & 0x7ffff])
 
-extern s8 *psxH;
 #define psxHs8(mem)		psxH[(mem) & 0xffff]
 #define psxHs16(mem)	((s16)SWAP16p((s16*)&psxH[(mem) & 0xffff]))
 #define psxHs32(mem)	((s32)SWAP32p((s32*)&psxH[(mem) & 0xffff]))
@@ -109,9 +112,6 @@ extern s8 *psxH;
 #define psxHu8ref(mem)	(*(u8*) &psxH[(mem) & 0xffff])
 #define psxHu16ref(mem)	(*(u16*)&psxH[(mem) & 0xffff])
 #define psxHu32ref(mem)	(*(u32*)&psxH[(mem) & 0xffff])
-
-extern u32 *psxMemWLUT;
-extern u32 *psxMemRLUT;
 
 #define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (void*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
 #define PSXMs8(mem)		(*(s8 *)PSXM(mem))
