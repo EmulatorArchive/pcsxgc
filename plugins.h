@@ -19,12 +19,24 @@
 #ifndef __PLUGINS_H__
 #define __PLUGINS_H__
 
+#include "Decode_XA.h"
 typedef struct {
 	unsigned long ulFreezeVersion;
 	unsigned long ulStatus;
 	unsigned long ulControl[256];
 	unsigned char psxVRam[1024*512*2];
 } GPUFreeze_t;
+
+typedef struct
+{
+ char          szSPUName[8];
+ unsigned long ulFreezeVersion;
+ unsigned long ulFreezeSize;
+ unsigned char cSPUPort[0x200];
+ unsigned char cSPURam[0x80000];
+ xa_decode_t   xaS;     
+} SPUFreeze_t;
+
 
 #if defined (__WIN32__)
 #include "Win32\plugin.h"
@@ -166,16 +178,6 @@ typedef long (CALLBACK* SPUinit)(void);
 typedef long (CALLBACK* SPUshutdown)(void);	
 typedef long (CALLBACK* SPUclose)(void);			
 typedef void (CALLBACK* SPUplaySample)(unsigned char);		
-typedef void (CALLBACK* SPUstartChannels1)(unsigned short);	
-typedef void (CALLBACK* SPUstartChannels2)(unsigned short);
-typedef void (CALLBACK* SPUstopChannels1)(unsigned short);	
-typedef void (CALLBACK* SPUstopChannels2)(unsigned short);	
-typedef void (CALLBACK* SPUputOne)(unsigned long,unsigned short);			
-typedef unsigned short (CALLBACK* SPUgetOne)(unsigned long);			
-typedef void (CALLBACK* SPUsetAddr)(unsigned char, unsigned short);			
-typedef void (CALLBACK* SPUsetPitch)(unsigned char, unsigned short);		
-typedef void (CALLBACK* SPUsetVolumeL)(unsigned char, short );		
-typedef void (CALLBACK* SPUsetVolumeR)(unsigned char, short );		
 //psemu pro 2 functions from now..
 typedef void (CALLBACK* SPUwriteRegister)(unsigned long, unsigned short);	
 typedef unsigned short (CALLBACK* SPUreadRegister)(unsigned long);		
@@ -188,15 +190,7 @@ typedef void (CALLBACK* SPUregisterCallback)(void (CALLBACK *callback)(void));
 typedef long (CALLBACK* SPUconfigure)(void);
 typedef long (CALLBACK* SPUtest)(void);			
 typedef void (CALLBACK* SPUabout)(void);
-typedef struct {
-	unsigned char PluginName[8];
-	unsigned long PluginVersion;
-	unsigned long Size;
-	unsigned char SPUPorts[0x200];
-	unsigned char SPURam[0x80000];
-	xa_decode_t xa;
-	unsigned char *SPUInfo;
-} SPUFreeze_t;
+
 typedef long (CALLBACK* SPUfreeze)(unsigned long, SPUFreeze_t *);
 typedef void (CALLBACK* SPUasync)(unsigned long);
 
@@ -209,16 +203,6 @@ EXT SPUtest             SPU_test;
 EXT SPUopen             SPU_open;
 EXT SPUclose            SPU_close;
 EXT SPUplaySample       SPU_playSample;
-EXT SPUstartChannels1   SPU_startChannels1;
-EXT SPUstartChannels2   SPU_startChannels2;
-EXT SPUstopChannels1    SPU_stopChannels1;
-EXT SPUstopChannels2    SPU_stopChannels2;
-EXT SPUputOne           SPU_putOne;
-EXT SPUgetOne           SPU_getOne;
-EXT SPUsetAddr          SPU_setAddr;
-EXT SPUsetPitch         SPU_setPitch;
-EXT SPUsetVolumeL       SPU_setVolumeL;
-EXT SPUsetVolumeR       SPU_setVolumeR;
 EXT SPUwriteRegister    SPU_writeRegister;
 EXT SPUreadRegister     SPU_readRegister;
 EXT SPUwriteDMA         SPU_writeDMA;

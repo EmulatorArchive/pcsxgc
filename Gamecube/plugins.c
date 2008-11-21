@@ -244,6 +244,7 @@ long CALLBACK SPU__configure(void) { return 0; }
 void CALLBACK SPU__about(void) {}
 long CALLBACK SPU__test(void) { return 0; }
 
+#if 0 //these are in the null library
 unsigned short regArea[10000];
 unsigned short spuCtrl,spuStat,spuIrq;
 unsigned long spuAddr;
@@ -383,6 +384,8 @@ void CALLBACK SPU__readDMAMem(unsigned short *pMem, int iSize) {
 }
 
 void CALLBACK SPU__playADPCMchannel(xa_decode_t *xap) {}
+void CALLBACK SPU__registerCallback(void (CALLBACK *callback)(void)) {}
+
 
 long CALLBACK SPU__freeze(unsigned long ulFreezeMode, SPUFreeze_t *pF) {
 	if (ulFreezeMode == 2) {
@@ -429,8 +432,7 @@ long CALLBACK SPU__freeze(unsigned long ulFreezeMode, SPUFreeze_t *pF) {
 
 	return 0;
 }
-
-void CALLBACK SPU__registerCallback(void (CALLBACK *callback)(void)) {}
+#endif
 
 #define LoadSpuSym1(dest, name) \
 	LoadSym(SPU_##dest, SPU##dest, name, 1);
@@ -466,26 +468,16 @@ int LoadSPUplugin(char *SPUdll) {
 	LoadSpuSym0(about, "SPUabout");
 	LoadSpuSym0(test, "SPUtest");
 	errval = 0;
-	LoadSpuSym2(startChannels1, "SPUstartChannels1");
-	LoadSpuSym2(startChannels2, "SPUstartChannels2");
-	LoadSpuSym2(stopChannels1, "SPUstopChannels1");
-	LoadSpuSym2(stopChannels2, "SPUstopChannels2");
-	LoadSpuSym2(putOne, "SPUputOne");
-	LoadSpuSym2(getOne, "SPUgetOne");
-	LoadSpuSym2(setAddr, "SPUsetAddr");
-	LoadSpuSym2(setPitch, "SPUsetPitch");
-	LoadSpuSym2(setVolumeL, "SPUsetVolumeL");
-	LoadSpuSym2(setVolumeR, "SPUsetVolumeR");
-	LoadSpuSymE(writeRegister, "SPUwriteRegister");
-	LoadSpuSymE(readRegister, "SPUreadRegister");		
-	LoadSpuSymE(writeDMA, "SPUwriteDMA");
-	LoadSpuSymE(readDMA, "SPUreadDMA");
-	LoadSpuSym0(writeDMAMem, "SPUwriteDMAMem");
-	LoadSpuSym0(readDMAMem, "SPUreadDMAMem");
-	LoadSpuSym0(playADPCMchannel, "SPUplayADPCMchannel");
-	LoadSpuSym0(freeze, "SPUfreeze");
-	LoadSpuSym0(registerCallback, "SPUregisterCallback");
-	LoadSpuSymN(async, "SPUasync");
+	LoadSpuSym1(writeRegister, "SPUwriteRegister");
+	LoadSpuSym1(readRegister, "SPUreadRegister");		
+	LoadSpuSym1(writeDMA, "SPUwriteDMA");
+	LoadSpuSym1(readDMA, "SPUreadDMA");
+	LoadSpuSym1(writeDMAMem, "SPUwriteDMAMem");
+	LoadSpuSym1(readDMAMem, "SPUreadDMAMem");
+	LoadSpuSym1(playADPCMchannel, "SPUplayADPCMchannel");
+	LoadSpuSym1(freeze, "SPUfreeze");
+	LoadSpuSym1(registerCallback, "SPUregisterCallback");
+	//LoadSpuSym1(registerCDDAVolume, "SPUregisterCDDAVolume");
 
 	return 0;
 }

@@ -46,31 +46,26 @@ extern long PAD__close(void);
 extern long PAD__readPort1(PadDataS*);
 extern long PAD__readPort2(PadDataS*);
 
-/* SPU */
+/* SPU NULL */
 typedef long (* SPUopen)(void);
-long SPU_d_init(void);				
-long SPU_d_shutdown(void);	
-long SPU_d_close(void);			
-long SPU_d_open(void);			
-void SPU_d_playSample(unsigned char);		
-void SPU_d_startChannels1(unsigned short);	
-void SPU_d_startChannels2(unsigned short);
-void SPU_d_stopChannels1(unsigned short);	
-void SPU_d_stopChannels2(unsigned short);	
-void SPU_d_putOne(unsigned long,unsigned short);			
-unsigned short SPU_d_getOne(unsigned long);			
-void SPU_d_setAddr(unsigned char, unsigned short);			
-void SPU_d_setPitch(unsigned char, unsigned short);		
-void SPU_d_setVolumeL(unsigned char, short );		
-void SPU_d_setVolumeR(unsigned char, short );		
-long SPU_d_test(void);
-long SPU_d_configure(void);
-void SPU_d_about(void);
-void SPU_d_playADPCMchannel(xa_decode_t *xap);
-void SPU_d_writeDMA(unsigned short val);
-unsigned short SPU_d_readDMA(void);
-unsigned short SPU_d_readRegister(unsigned long reg);
-void SPU_d_writeRegister(unsigned long reg, unsigned short val);
+void NULL_SPUwriteRegister(unsigned long reg, unsigned short val);
+unsigned short NULL_SPUreadRegister(unsigned long reg);
+unsigned short NULL_SPUreadDMA(void);
+void NULL_SPUwriteDMA(unsigned short val);
+void NULL_SPUwriteDMAMem(unsigned short * pusPSXMem,int iSize);
+void NULL_SPUreadDMAMem(unsigned short * pusPSXMem,int iSize);
+void NULL_SPUplayADPCMchannel(xa_decode_t *xap);
+long NULL_SPUinit(void);
+long NULL_SPUopen(void);
+void NULL_SPUsetConfigFile(char * pCfg);
+long NULL_SPUclose(void);
+long NULL_SPUshutdown(void);
+long NULL_SPUtest(void);
+void NULL_SPUregisterCallback(void (*callback)(void));
+void NULL_SPUregisterCDDAVolume(void (*CDDAVcallback)(unsigned short,unsigned short));
+char * NULL_SPUgetLibInfos(void);
+void NULL_SPUabout(void);
+long NULL_SPUfreeze(unsigned long ulFreezeMode,SPUFreeze_t *);
 
 /* CDR */
 long CDR__open(void);
@@ -174,61 +169,41 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 
 #define SPU_PLUGIN \
 	{ "SPU",      \
-	  27,         \
+	  17,         \
 	  { { "SPUinit",  \
-	      SPU_d_init }, \
+	      NULL_SPUinit }, \
 	    { "SPUshutdown",	\
-	      SPU_d_shutdown}, \
+	      NULL_SPUshutdown}, \
 	    { "SPUopen", \
-	      SPU_d_open}, \
+	      NULL_SPUopen}, \
 	    { "SPUclose", \
-	      SPU_d_close}, \
+	      NULL_SPUclose}, \
 	    { "SPUconfigure", \
-	      SPU_d_configure}, \
+	      NULL_SPUsetConfigFile}, \
 	    { "SPUabout", \
-	      SPU_d_about}, \
+	      NULL_SPUabout}, \
 	    { "SPUtest", \
-	      SPU_d_test}, \
-	    { "SPUstartChannels1", \
-	      SPU_d_startChannels1}, \
-	    { "SPUstartChannels2", \
-	      SPU_d_startChannels2}, \
-	    { "SPUstopChannels1", \
-	      SPU_d_stopChannels1}, \
-	    { "SPUstopChannels2", \
-	      SPU_d_stopChannels2}, \
-	    { "SPUputOne", \
-	      SPU_d_putOne}, \
-	    { "SPUgetOne", \
-	      SPU_d_getOne}, \
-	    { "SPUsetAddr", \
-	      SPU_d_setAddr}, \
-	    { "SPUsetPitch", \
-	      SPU_d_setPitch}, \
-	    { "SPUsetVolumeL", \
-	      SPU_d_setVolumeL}, \
-	    { "SPUsetVolumeR", \
-	      SPU_d_setVolumeR}, \
+	      NULL_SPUtest}, \
 	    { "SPUwriteRegister", \
-	      SPU_d_writeRegister}, \
+	      NULL_SPUwriteRegister}, \
 	    { "SPUreadRegister", \
-	      SPU_d_readRegister}, \
+	      NULL_SPUreadRegister}, \
 	    { "SPUwriteDMA", \
-	      SPU_d_writeDMA}, \
+	      NULL_SPUwriteDMA}, \
 	    { "SPUreadDMA", \
-	      SPU_d_readDMA}, \
+	      NULL_SPUreadDMA}, \
 	    { "SPUwriteDMAMem", \
-	      SPU_d_writeDMA}, \
+	      NULL_SPUwriteDMAMem}, \
 	    { "SPUreadDMAMem", \
-	      SPU_d_readDMA}, \
+	      NULL_SPUreadDMAMem}, \
 	    { "SPUplayADPCMchannel", \
-	      SPU_d_playADPCMchannel}, \
+	      NULL_SPUplayADPCMchannel}, \
 	    { "SPUfreeze", \
-	      SPU_d_close}, \
+	      NULL_SPUfreeze}, \
 	    { "SPUregisterCallback", \
-	      SPU_d_close}, \
-	    { "SPUasync", \
-	      SPU_d_close} \
+	      NULL_SPUregisterCallback}, \
+	    { "SPUregisterCDDAVolume", \
+	      NULL_SPUregisterCDDAVolume} \
 	       } }
 	       
 #define GPU_NULL_PLUGIN \

@@ -474,6 +474,7 @@ int SaveState(const char *file) {
 	free(gpufP);
 
 	// spu
+/*
 	spufP = (SPUFreeze_t *) malloc(16);
 	SPU_freeze(2, spufP);
 	Size = spufP->Size;
@@ -507,7 +508,7 @@ int SaveState(const char *file) {
 #endif
 	gzwrite(f, spufP, Size);
 	free(spufP);
-
+*/
 	sioFreeze(f, 1);
 	cdrFreeze(f, 1);
 	psxHwFreeze(f, 1);
@@ -577,7 +578,7 @@ int LoadState(const char *file) {
 	free(gpufP);
 
 	// spu
-	gzread(f, &Size, 4);
+/*	gzread(f, &Size, 4);
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
 	Size = SWAP32(Size);
 #endif
@@ -603,7 +604,7 @@ int LoadState(const char *file) {
 		for (i=0; i<16384; i++)
 			spufP->xa.pcm[i] = SWAP16p((void*)&spufP->xa.pcm[i]);
 	}
-#endif
+#endif*/
 	SPU_freeze(0, spufP);
 	free(spufP);
 

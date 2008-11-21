@@ -17,9 +17,9 @@ include $(DEVKITPPC)/gamecube_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	CubeSX
 BUILD		:=	build
-SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/
+SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/ ../PeteNullSPU/
 DATA		:=	data  
-INCLUDES	:=	.. ../ppc/
+INCLUDES	:=	.. ../ppc/ ../PeteNullSPU/
 
 #---------------------------------------------------------------------------------
 # options for code generation
