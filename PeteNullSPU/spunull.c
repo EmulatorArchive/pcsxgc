@@ -112,7 +112,7 @@ void CALLBACK NULL_SPUwriteRegister(unsigned long reg, unsigned short val)
         return;
     //-------------------------------------------------//
     case H_SPUdata:
-        spuMem[spuAddr>>1] = val;
+        spuMem[spuAddr>>1] = SWAP16(val);
         spuAddr+=2;
         if(spuAddr>0x7ffff) spuAddr=0;
         return;
@@ -221,7 +221,7 @@ unsigned short CALLBACK NULL_SPUreadRegister(unsigned long reg)
 
     case H_SPUdata:
       {
-       unsigned short s=spuMem[spuAddr>>1];
+       unsigned short s=SWAP16(spuMem[spuAddr>>1]);
        spuAddr+=2;
        if(spuAddr>0x7ffff) spuAddr=0;
        return s;
@@ -260,6 +260,7 @@ void CALLBACK NULL_SPUwriteDMAMem(unsigned short * pusPSXMem,int iSize)
  for(i=0;i<iSize;i++)
   {
    spuMem[spuAddr>>1] = *pusPSXMem++;                  // spu addr got by writeregister
+   spuMem[spuAddr>>1] = SWAP16(spuMem[spuAddr>>1]);
    spuAddr+=2;                                         // inc spu addr
    if(spuAddr>0x7ffff) spuAddr=0;                      // wrap
   }
@@ -272,7 +273,7 @@ void CALLBACK NULL_SPUreadDMAMem(unsigned short * pusPSXMem,int iSize)
  int i;
  for(i=0;i<iSize;i++)
   {
-   *pusPSXMem++=spuMem[spuAddr>>1];                    // spu addr got by writeregister
+   *pusPSXMem++=SWAP16(spuMem[spuAddr>>1]);                    // spu addr got by writeregister
    spuAddr+=2;                                         // inc spu addr
    if(spuAddr>0x7ffff) spuAddr=0;                      // wrap
   }
