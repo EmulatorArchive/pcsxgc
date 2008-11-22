@@ -69,7 +69,7 @@ void SoundFeedStreamData(unsigned char* pSound,long lBytes)
 	  free(audio_buffer);
 	  audio_buffer = NULL;
   }
-	
+	lBytes-=lBytes%32;
   audio_buffer = (unsigned char*)memalign(32,lBytes);
   
   memcpy(audio_buffer,pSound,lBytes);

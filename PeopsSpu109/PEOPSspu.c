@@ -538,7 +538,6 @@ static void *MAINThread(void *arg)
  int ch,predict_nr,shift_factor,flags,d,s;
  int bIRQReturn=0;SPUCHAN * pChannel;
                             
-
  //while(!bEndThread)                                    // until we are shutting down
  // {
 //    SysPrintf("MAINThread called\n");

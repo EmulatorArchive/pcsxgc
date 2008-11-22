@@ -139,9 +139,9 @@ int main(int argc, char *argv[]) {
 	Config.Cpu = 1;	//interpreter = 1, dynarec = 0
 	Config.CpuBias = 2; //for 50/60fps
 	Config.PsxOut = 1;
-	Config.HLE = 0;
+	Config.HLE = 1;
 	Config.Xa = 0;  //XA enabled
-	Config.Cdda = 1;
+	Config.Cdda = 0;
 	Config.PsxAuto = 1; //Autodetect
     SysPrintf("start main()\r\n");
 

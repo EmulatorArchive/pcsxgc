@@ -40,8 +40,8 @@ unsigned short CALLBACK PEOPS_SPUreadDMA(void)
   //DEBUG_print("PEOPS_SPUreadDMA called",13);
  unsigned short s;
 
- s=SWAP16(spuMem[spuAddr>>1]);
-
+ //s=SWAP16(spuMem[spuAddr>>1]);
+  s=spuMem[spuAddr>>1];
 
  spuAddr+=2;
  if(spuAddr>0x7ffff) spuAddr=0;
@@ -63,7 +63,7 @@ void CALLBACK PEOPS_SPUreadDMAMem(unsigned short * pusPSXMem,int iSize)
  for(i=0;i<iSize;i++)
   {
    *pusPSXMem++=spuMem[spuAddr>>1];                    // spu addr got by writeregister
-   spuMem[spuAddr>>1] = SWAP16(spuMem[spuAddr>>1]);
+   //spuMem[spuAddr>>1] = SWAP16(spuMem[spuAddr>>1]);
    spuAddr+=2;                                         // inc spu addr
    if(spuAddr>0x7ffff) spuAddr=0;                      // wrap
   }
@@ -87,8 +87,8 @@ void CALLBACK PEOPS_SPUreadDMAMem(unsigned short * pusPSXMem,int iSize)
 void CALLBACK PEOPS_SPUwriteDMA(unsigned short val)
 {
 //  DEBUG_print("PEOPS_SPUwriteDMA called",15);
- spuMem[spuAddr>>1] = SWAP16(val);                             // spu addr got by writeregister
-
+ //spuMem[spuAddr>>1] = SWAP16(val);                             // spu addr got by writeregister
+  spuMem[spuAddr>>1] = val;
  spuAddr+=2;                                           // inc spu addr
  if(spuAddr>0x7ffff) spuAddr=0;                        // wrap
 
@@ -108,7 +108,7 @@ void CALLBACK PEOPS_SPUwriteDMAMem(unsigned short * pusPSXMem,int iSize)
  for(i=0;i<iSize;i++)
   {
    spuMem[spuAddr>>1] = *pusPSXMem++;                  // spu addr got by writeregister
-   spuMem[spuAddr>>1] = SWAP16(spuMem[spuAddr>>1]);
+   //spuMem[spuAddr>>1] = SWAP16(spuMem[spuAddr>>1]);
    spuAddr+=2;                                         // inc spu addr
    if(spuAddr>0x7ffff) spuAddr=0;                      // wrap
   }
