@@ -140,8 +140,8 @@ int main(int argc, char *argv[]) {
 	Config.CpuBias = 2; //for 50/60fps
 	Config.PsxOut = 1;
 	Config.HLE = 0;
-	Config.Xa = 0;
-	Config.Cdda = 0;
+	Config.Xa = 0;  //XA enabled
+	Config.Cdda = 1;
 	Config.PsxAuto = 1; //Autodetect
     SysPrintf("start main()\r\n");
 
@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
 	SysReset();
 	
     SysPrintf("CheckCdrom()\r\n");
-	CheckCdrom();
-	LoadCdrom();
+//	CheckCdrom();
+//	LoadCdrom();
 
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();

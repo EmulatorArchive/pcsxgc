@@ -67,6 +67,32 @@ char * NULL_SPUgetLibInfos(void);
 void NULL_SPUabout(void);
 long NULL_SPUfreeze(unsigned long ulFreezeMode,SPUFreeze_t *);
 
+/* SPU PEOPS 1.9 */
+//dma.c
+unsigned short CALLBACK PEOPS_SPUreadDMA(void);
+void CALLBACK PEOPS_SPUreadDMAMem(unsigned short * pusPSXMem,int iSize);
+void CALLBACK PEOPS_SPUwriteDMA(unsigned short val);
+void CALLBACK PEOPS_SPUwriteDMAMem(unsigned short * pusPSXMem,int iSize);
+//PEOPSspu.c
+void CALLBACK PEOPS_SPUasync(unsigned long cycle);
+void CALLBACK PEOPS_SPUupdate(void);
+void CALLBACK PEOPS_SPUplayADPCMchannel(xa_decode_t *xap);
+long CALLBACK PEOPS_SPUinit(void);
+long PEOPS_SPUopen(void);
+void PEOPS_SPUsetConfigFile(char * pCfg);
+long CALLBACK PEOPS_SPUclose(void);
+long CALLBACK PEOPS_SPUshutdown(void);
+long CALLBACK PEOPS_SPUtest(void);
+long CALLBACK PEOPS_SPUconfigure(void);
+void CALLBACK PEOPS_SPUabout(void);
+void CALLBACK PEOPS_SPUregisterCallback(void (CALLBACK *callback)(void));
+void CALLBACK PEOPS_SPUregisterCDDAVolume(void (CALLBACK *CDDAVcallback)(unsigned short,unsigned short));
+//registers.c
+void CALLBACK PEOPS_SPUwriteRegister(unsigned long reg, unsigned short val);
+unsigned short CALLBACK PEOPS_SPUreadRegister(unsigned long reg);
+//freeze.c
+long CALLBACK PEOPS_SPUfreeze(unsigned long ulFreezeMode,SPUFreeze_t * pF);
+
 /* CDR */
 long CDR__open(void);
 long CDR__init(void);
@@ -167,7 +193,7 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 	      CDR__getBufferSub} \
 	       } }
 
-#define SPU_PLUGIN \
+#define SPU_NULL_PLUGIN \
 	{ "SPU",      \
 	  17,         \
 	  { { "SPUinit",  \
@@ -205,7 +231,48 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 	    { "SPUregisterCDDAVolume", \
 	      NULL_SPUregisterCDDAVolume} \
 	       } }
-	       
+
+#define SPU_PEOPS_PLUGIN \
+	{ "SPU",      \
+	  18,         \
+	  { { "SPUinit",  \
+	      PEOPS_SPUinit }, \
+	    { "SPUshutdown",	\
+	      PEOPS_SPUshutdown}, \
+	    { "SPUopen", \
+	      PEOPS_SPUopen}, \
+	    { "SPUclose", \
+	      PEOPS_SPUclose}, \
+	    { "SPUconfigure", \
+	      PEOPS_SPUsetConfigFile}, \
+	    { "SPUabout", \
+	      PEOPS_SPUabout}, \
+	    { "SPUtest", \
+	      PEOPS_SPUtest}, \
+	    { "SPUwriteRegister", \
+	      PEOPS_SPUwriteRegister}, \
+	    { "SPUreadRegister", \
+	      PEOPS_SPUreadRegister}, \
+	    { "SPUwriteDMA", \
+	      PEOPS_SPUwriteDMA}, \
+	    { "SPUreadDMA", \
+	      PEOPS_SPUreadDMA}, \
+	    { "SPUwriteDMAMem", \
+	      PEOPS_SPUwriteDMAMem}, \
+	    { "SPUreadDMAMem", \
+	      PEOPS_SPUreadDMAMem}, \
+	    { "SPUplayADPCMchannel", \
+	      PEOPS_SPUplayADPCMchannel}, \
+	    { "SPUfreeze", \
+	      PEOPS_SPUfreeze}, \
+	    { "SPUregisterCallback", \
+	      PEOPS_SPUregisterCallback}, \
+	    { "SPUregisterCDDAVolume", \
+	      PEOPS_SPUregisterCDDAVolume}, \
+	    { "SPUasync", \
+	      PEOPS_SPUasync} \
+	       } }
+      
 #define GPU_NULL_PLUGIN \
 	{ "GPU",      \
 	  10,         \
@@ -268,7 +335,8 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 #define PLUGIN_SLOT_1 PAD1_PLUGIN
 #define PLUGIN_SLOT_2 PAD2_PLUGIN
 #define PLUGIN_SLOT_3 CDR_PLUGIN
-#define PLUGIN_SLOT_4 SPU_PLUGIN
+//#define PLUGIN_SLOT_4 SPU_NULL_PLUGIN
+#define PLUGIN_SLOT_4 SPU_PEOPS_PLUGIN
 //#define PLUGIN_SLOT_5 GPU_NULL_PLUGIN
 #define PLUGIN_SLOT_5 GPU_PEOPS_PLUGIN
 #define PLUGIN_SLOT_6 EMPTY_PLUGIN

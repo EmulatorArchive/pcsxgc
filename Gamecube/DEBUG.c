@@ -51,7 +51,7 @@ int writtenbefore = 0;
 int amountwritten = 0;
 //char *dump_filename = "dev0:\\PSXISOS\\debug.txt";
 char *dump_filename = "/PSXISOS/debug.txt";
-FILE* f = NULL;
+FILE* fdebug = NULL;
 void DEBUG_print(char* string,int pos){
 
 	#ifdef SHOW_DEBUG
@@ -69,21 +69,21 @@ void DEBUG_print(char* string,int pos){
 		else if(pos == DBG_SDGECKOOPEN) {
 #ifdef SDPRINT
 			if(!f && printToSD)
-				f = fopen( dump_filename, "wb" );
+				fdebug = fopen( dump_filename, "wb" );
 #endif
 		}
 		else if(pos == DBG_SDGECKOAPPEND) {
 #ifdef SDPRINT
-			if(!f && printToSD)
-				f = fopen( dump_filename, "ab" );
+			if(!fdebug && printToSD)
+				fdebug = fopen( dump_filename, "ab" );
 #endif
 		}
 		else if(pos == DBG_SDGECKOCLOSE) {
 #ifdef SDPRINT
-			if(f)
+			if(fdebug)
 			{
-				fclose(f);
-				f = NULL;
+				fclose(fdebug);
+				fdebug = NULL;
 			}
 #endif
 		}

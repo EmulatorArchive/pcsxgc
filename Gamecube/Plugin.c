@@ -32,10 +32,6 @@ void OnFile_Exit();
 
 unsigned long gpuDisp;
 
-long SPU__open(void) {
-	return SPU_open();
-}
-
 int StatesC = 0;
 extern int UseGui;
 int cdOpenCase = 0;

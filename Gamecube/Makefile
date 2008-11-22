@@ -17,16 +17,16 @@ include $(DEVKITPPC)/gamecube_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	CubeSX
 BUILD		:=	build
-SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/ ../PeteNullSPU/
+SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/ ../PeopsSpu109/
 DATA		:=	data  
-INCLUDES	:=	.. ../ppc/ ../PeteNullSPU/
+INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 
 CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
-		  -D__GX__ -D_SDL -DSHOW_DEBUG -DEMBEDDED_FONTS
+		  -D__GX__ -D_SDL -DSHOW_DEBUG -DEMBEDDED_FONTS -DNOTHREADLIB
 		  
 CXXFLAGS	=	$(CFLAGS)
 
