@@ -17,9 +17,9 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	WiiSX
 BUILD		:=	build
-SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/
+SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/ ../PeopsSpu109/
 DATA		:=	data  
-INCLUDES	:=	.. ../ppc/
+INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 
 #---------------------------------------------------------------------------------
 # options for code generation
