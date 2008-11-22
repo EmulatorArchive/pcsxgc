@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
 	SysReset();
 	
     SysPrintf("CheckCdrom()\r\n");
-//	CheckCdrom();
-//	LoadCdrom();
+	CheckCdrom();
+	LoadCdrom();
 
     SysPrintf("Execute()\r\n");
 	psxCpu->Execute();

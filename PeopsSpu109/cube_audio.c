@@ -82,6 +82,6 @@ void SoundFeedStreamData(unsigned char* pSound,long lBytes)
 	AUDIO_StartDMA();
 	sprintf(txtbuffer,"SoundFeedStreamData length: %ld bytes",lBytes);
 //	SysPrintf(txtbuffer);
-	DEBUG_print(txtbuffer,12);
+	DEBUG_print(txtbuffer,13);
 	
 }
