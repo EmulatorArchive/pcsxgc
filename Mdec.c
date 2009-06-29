@@ -1,30 +1,30 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-/*  This code was based on the FPSE v0.08 Mdec decoder*/
+/*
+* Movie decoder. Based on the FPSE v0.08 Mdec decoder.
+*/
 
-#include <stdio.h>
-#include <string.h>
+#include "mdec.h"
 
-#include "PsxCommon.h"
-#include "Mdec.h"
-
-//#define FIXED
+#define _FIXED
 
 #define CONST_BITS  8
 #define PASS1_BITS  2
@@ -169,10 +169,10 @@ void yuv2rgb24(int *blk,unsigned char *image);
 void yuv2rgb15(int *blk,unsigned short *image);
 
 struct {
-	unsigned long command;
-	unsigned long status;
+	u32 command;
+	u32 status;
 	unsigned short *rl;
-	long rlsize;
+	int rlsize;
 } mdec;
 
 int iq_y[DCTSIZE2],iq_uv[DCTSIZE2];
@@ -185,7 +185,7 @@ void mdecInit(void) {
 }
 
 
-__inline void mdecWrite0(u32 data) {
+void mdecWrite0(u32 data) {
 #ifdef CDR_LOG
 	CDR_LOG("mdec0 write %lx\n", data);
 #endif
@@ -195,7 +195,7 @@ __inline void mdecWrite0(u32 data) {
 	}
 }
 
-__inline void mdecWrite1(u32 data) {
+void mdecWrite1(u32 data) {
 #ifdef CDR_LOG
 	CDR_LOG("mdec1 write %lx\n", data);
 #endif
@@ -205,7 +205,7 @@ __inline void mdecWrite1(u32 data) {
 	}
 }
 
-__inline u32 mdecRead0(void) {
+u32 mdecRead0(void) {
 #ifdef CDR_LOG
 	CDR_LOG("mdec0 read %lx\n", mdec.command);
 #endif
@@ -219,7 +219,7 @@ __inline u32 mdecRead0(void) {
 #define MDEC_RGB24	0x02000000
 #define MDEC_STP	0x00800000
 
-__inline u32 mdecRead1(void) {
+u32 mdecRead1(void) {
 #ifdef CDR_LOG
 	CDR_LOG("mdec1 read %lx\n", mdec.status);
 #endif
@@ -270,16 +270,16 @@ void psxDma1(u32 adr, u32 bcr, u32 chcr) {
 
     image = (u16*)PSXM(adr);
 	if (mdec.command&0x08000000) {
-//		MDECOUTDMA_INT(((size * (1000000 / 9000)) / 4) /** 4*/ >> BIAS);
-		MDECOUTDMA_INT((size / 4) >> BIAS);
+//		MDECOUTDMA_INT(((size * (1000000 / 9000)) / 4) /** 4*/ / BIAS);
+		MDECOUTDMA_INT((size / 4) / BIAS);
 		size = size / ((16*16)/2);
 		for (;size>0;size--,image+=(16*16)) {
 			mdec.rl = rl2blk(blk,mdec.rl);
 			yuv2rgb15(blk,image);
 		}
 	} else {
-//		MDECOUTDMA_INT(((size * (1000000 / 9000)) / 4) /** 4*/ >> BIAS);
-		MDECOUTDMA_INT((size / 4) >> BIAS);
+//		MDECOUTDMA_INT(((size * (1000000 / 9000)) / 4) /** 4*/ / BIAS);
+		MDECOUTDMA_INT((size / 4) / BIAS);
 		size = size / ((24*16)/2);
 		for (;size>0;size--,image+=(24*16)) {
 			mdec.rl = rl2blk(blk,mdec.rl);
@@ -294,9 +294,17 @@ void mdec1Interrupt() {
 	CDR_LOG("mdec1Interrupt\n");
 #endif
 	if (HW_DMA1_CHCR & SWAP32(0x01000000)) {
-		psxRegs.intCycle[5+24+1]*= 8;
-		psxRegs.intCycle[5+24] = psxCurrentCycle;
-		psxIntAdd(0x02000000);
+    // Set a fixed value totaly arbitrarie
+    // another sound value is PSXCLK / 60 or
+    // PSXCLK / 50 since the bug happend
+    // at end of frame. PSXCLK / 1000 seems
+    // good for FF9.
+    // (for FF9 need < ~28000)
+    // CAUTION: commented interrupt-handling may lead to problems, keep an eye ;-)
+		MDECOUTDMA_INT(PSXCLK / 1000);
+    	//psxRegs.interrupt|= 0x02000000;
+		//psxRegs.intCycle[5+24+1] *= 8;
+		//psxRegs.intCycle[5+24] = psxRegs.cycle;
 		HW_DMA1_CHCR&= SWAP32(~0x01000000);
 		DMA_INTERRUPT(1);
 	} else {
@@ -350,11 +358,11 @@ unsigned short* rl2blk(int *blk,unsigned short *mdec_rl) {
 		if (i>1) iqtab = iq_y;
 
 		// zigzag transformation
-		rl = SWAP16p(mdec_rl); mdec_rl++;
+		rl = SWAP16(*mdec_rl); mdec_rl++;
 		q_scale = RUNOF(rl);
 		blk[0] = iqtab[0]*VALOF(rl);
 		for(k = 0;;) {
-			rl = SWAP16p(mdec_rl); mdec_rl++;
+			rl = SWAP16(*mdec_rl); mdec_rl++;
 			if (rl==NOP) break;
 			k += RUNOF(rl)+1;	// skip level zero-coefficients
 			if (k > 63) break;
@@ -372,7 +380,7 @@ unsigned short* rl2blk(int *blk,unsigned short *mdec_rl) {
 	return mdec_rl;
 }
 
-#ifdef FIXED
+#ifdef _FIXED
 #define	MULR(a)		((((int)0x0000059B) * (a)) >> 10)
 #define	MULG(a)		((((int)0xFFFFFEA1) * (a)) >> 10)
 #define	MULG2(a)	((((int)0xFFFFFD25) * (a)) >> 10)
@@ -384,7 +392,7 @@ unsigned short* rl2blk(int *blk,unsigned short *mdec_rl) {
 #define	MULB(a)		((int)((float)1.77200 * (a)))
 #endif
 
-#define	MAKERGB15(r,g,b)	SWAP16(( (((r)>>3)<<10)|(((g)>>3)<<5)|((b)>>3) ))
+#define	MAKERGB15(r,g,b)	( SWAP16((((r)>>3)<<10)|(((g)>>3)<<5)|((b)>>3)) )
 #define	ROUND(c)	roundtbl[((c)+128+256)]//&0x3ff]
 /*#define ROUND(c)	round(c+128)
 int round(int r) {
@@ -520,32 +528,14 @@ void yuv2rgb24(int *blk,unsigned char *image) {
 	}
 }
 
-static void mdecSwap()
-{
-	int i;
-
-	mdec.command = SWAP32p((void *)&mdec.command);
-	mdec.status = SWAP32p((void *)&mdec.status);
-	mdec.rl = (unsigned short *)SWAP32p((void *)&mdec.rl);
-	mdec.rlsize = SWAP32p((void *)&mdec.rlsize);
-	for (i=0; i<DCTSIZE2; i++) {
-		iq_y[i] = SWAP32p((u32 *)&iq_y[i]);
-		iq_uv[i] = SWAP32p((u32 *)&iq_uv[i]);
-	}
-}
-
 int mdecFreeze(gzFile f, int Mode) {
 	char Unused[4096];
-	
-	mdecSwap();
-	
+
 	gzfreeze(&mdec, sizeof(mdec));
 	gzfreezel(iq_y);
 	gzfreezel(iq_uv);
 	gzfreezel(Unused);
-	
-	mdecSwap();
-	
+
 	return 0;
 }
 

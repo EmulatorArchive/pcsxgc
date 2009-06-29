@@ -1,21 +1,5 @@
-/*
-	PSEmu Plugin Developer Kit Header definition
-
-	(C)1998 Vision Thing
-
-	This file can be used only to develop PSEmu Plugins
-	Other usage is highly prohibited.
-*/
-
-
-// IMPORTANT!!!
-
-// if you want to add return codes (any errors or warnings) just drop mail to
-// plugin@psemu.com
-
 #ifndef _PSEMU_PLUGIN_DEFS_H
 #define _PSEMU_PLUGIN_DEFS_H
-
 
 // header version
 #define _PPDK_HEADER_VERSION		3
@@ -29,30 +13,17 @@
 #define PSE_LT_PAD					8
 #define PSE_LT_NET					16
 
-
-// every function in DLL if completed sucessfully should return this value
-#define PSE_ERR_SUCCESS				0
-
-// undefined error but fatal one, that kills all functionality
-#define PSE_ERR_FATAL				-1
-
-
+// DLL function return codes
+#define PSE_ERR_SUCCESS				0	// every function in DLL if completed sucessfully should return this value
+#define PSE_ERR_FATAL				-1	// undefined error but fatal one, that kills all functionality
 
 // XXX_Init return values
 // Those return values apply to all libraries
 // currently obsolete - preserved for compatibilty
 
-
-// initialization went OK
-#define PSE_INIT_ERR_SUCCESS		0
-
-// this driver is not configured
-#define PSE_INIT_ERR_NOTCONFIGURED	-2
-
-// this driver can not operate properly on this hardware or hardware is not detected
-#define PSE_INIT_ERR_NOHARDWARE		-3
-
-
+#define PSE_INIT_ERR_SUCCESS		0	// initialization went OK
+#define PSE_INIT_ERR_NOTCONFIGURED	-2	// this driver is not configured
+#define PSE_INIT_ERR_NOHARDWARE		-3	// this driver can not operate properly on this hardware or hardware is not detected
 
 /*         GPU PlugIn          */
 
@@ -83,27 +54,21 @@
 
 typedef struct
 {
-	unsigned long	flags;
-	unsigned long	status;
-	HWND			window;
+	uint32_t	flags;
+	uint32_t	status;
+ 	void*	window;
 	unsigned char reserved[100];
 } gpuQueryS;
 
 // gpuQueryS.flags
 // if driver can operate in both modes it must support GPU_changeMode();
-// this driver can operate in fullscreen mode
-#define PSE_GPU_FLAGS_FULLSCREEN		1
-// this driver can operate in windowed mode
-#define PSE_GPU_FLAGS_WINDOWED			2
-
+#define PSE_GPU_FLAGS_FULLSCREEN		1	// this driver can operate in fullscreen mode
+#define PSE_GPU_FLAGS_WINDOWED			2	// this driver can operate in windowed mode
 
 // gpuQueryS.status
-// this driver cannot operate in this windowed mode
-#define PSE_GPU_STATUS_WINDOWWRONG	1
+#define PSE_GPU_STATUS_WINDOWWRONG	1	// this driver cannot operate in this windowed mode
 
 //  GPU_Query	End	- will be implemented in v2
-
-
 
 
 /*         CDR PlugIn          */

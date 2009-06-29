@@ -1,26 +1,32 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
 #ifndef __CDROM_H__
 #define __CDROM_H__
 
-#include "PsxCommon.h"
-#include "Decode_XA.h"
+#include "psxcommon.h"
+#include "decode_xa.h"
+#include "r3000a.h"
+#include "plugins.h"
+#include "psxmem.h"
+#include "psxhw.h"
 
 typedef struct {
 	unsigned char OCUP;
@@ -49,34 +55,30 @@ typedef struct {
 	unsigned long Reading;
 
 	unsigned char ResultTN[6];
-#ifdef __DREAMCAST__
-	unsigned char ResultTD[4] __attribute__ ((aligned (4)));
-#else
 	unsigned char ResultTD[4];
-#endif
 	unsigned char SetSector[4];
 	unsigned char SetSectorSeek[4];
 	unsigned char Track;
-	long Play;
-	long CurTrack;
-	long Mode, File, Channel, Muted;
-	long Reset;
-	long RErr;
-	long FirstSector;
+	int Play;
+	int CurTrack;
+	int Mode, File, Channel, Muted;
+	int Reset;
+	int RErr;
+	int FirstSector;
 
 	xa_decode_t Xa;
 
-	long Init;
+	int Init;
 
 	unsigned char Irq;
 	unsigned long eCycle;
 
-	long Seeked;
+	int Seeked;
 
 	char Unused[4083];
 } cdrStruct;
 
-extern cdrStruct cdr;
+cdrStruct cdr;
 
 void cdrReset();
 void cdrInterrupt();

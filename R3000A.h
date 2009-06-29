@@ -1,27 +1,30 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
 #ifndef __R3000A_H__
 #define __R3000A_H__
 
-#include <stdio.h>
-
-#include "PsxCommon.h"
+#include "psxcommon.h"
+#include "psxmem.h"
+#include "psxcounters.h"
+#include "psxbios.h"
 
 typedef struct {
 	int  (*Init)();
@@ -32,26 +35,27 @@ typedef struct {
 	void (*Shutdown)();
 } R3000Acpu;
 
-extern R3000Acpu *psxCpu;
+R3000Acpu *psxCpu;
 extern R3000Acpu psxInt;
-#if defined(__i386__) || defined(__sh__) || defined(__ppc__)
+extern R3000Acpu psxIntDbg;
+#if defined(__x86_64__) || defined(__i386__) || defined(__sh__) || defined(__ppc__) || defined(HW_RVL) || defined(HW_DOL)
 extern R3000Acpu psxRec;
 #define PSXREC
 #endif
 
 typedef union {
 	struct {
-		unsigned long   r0, at, v0, v1, a0, a1, a2, a3,
+		u32   r0, at, v0, v1, a0, a1, a2, a3,
 						t0, t1, t2, t3, t4, t5, t6, t7,
 						s0, s1, s2, s3, s4, s5, s6, s7,
 						t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
 	} n;
-	unsigned long r[34]; /* Lo, Hi in r[33] and r[34] */
+	u32 r[34]; /* Lo, Hi in r[33] and r[34] */
 } psxGPRRegs;
 
 typedef union {
 	struct {
-		unsigned long	Index,     Random,    EntryLo0,  EntryLo1,
+		u32	Index,     Random,    EntryLo0,  EntryLo1,
 						Context,   PageMask,  Wired,     Reserved0,
 						BadVAddr,  Count,     EntryHi,   Compare,
 						Status,    Cause,     EPC,       PRid,
@@ -60,7 +64,7 @@ typedef union {
 						Reserved4, Reserved5, ECC,       CacheErr,
 						TagLo,     TagHi,     ErrorEPC,  Reserved6;
 	} n;
-	unsigned long r[32];
+	u32 r[32];
 } psxCP0Regs;
 
 typedef struct {
@@ -91,34 +95,34 @@ typedef union {
 	struct {
 		SVector3D     v0, v1, v2;
 		CBGR          rgb;
-		long          otz;
-		long          ir0, ir1, ir2, ir3;
+		s32          otz;
+		s32          ir0, ir1, ir2, ir3;
 		SVector2D     sxy0, sxy1, sxy2, sxyp;
 		SVector2Dz    sz0, sz1, sz2, sz3;
 		CBGR          rgb0, rgb1, rgb2;
-		long          reserved;
-		long          mac0, mac1, mac2, mac3;
-		unsigned long irgb, orgb;
-		long          lzcs, lzcr;
+		s32          reserved;
+		s32          mac0, mac1, mac2, mac3;
+		u32 irgb, orgb;
+		s32          lzcs, lzcr;
 	} n;
-	unsigned long r[32];
+	u32 r[32];
 } psxCP2Data;
 
 typedef union {
 	struct {
 		SMatrix3D rMatrix;
-		long      trX, trY, trZ;
+		s32      trX, trY, trZ;
 		SMatrix3D lMatrix;
-		long      rbk, gbk, bbk;
+		s32      rbk, gbk, bbk;
 		SMatrix3D cMatrix;
-		long      rfc, gfc, bfc;
-		long      ofx, ofy;
-		long      h;
-		long      dqa, dqb;
-		long      zsf3, zsf4;
-		long      flag;
+		s32      rfc, gfc, bfc;
+		s32      ofx, ofy;
+		s32      h;
+		s32      dqa, dqb;
+		s32      zsf3, zsf4;
+		s32      flag;
 	} n;
-	unsigned long r[32];
+	u32 r[32];
 } psxCP2Ctrl;
 
 typedef struct {
@@ -128,21 +132,36 @@ typedef struct {
 	psxCP2Ctrl CP2C; 	/* Cop2 control registers */
     u32 pc;				/* Program counter */
     u32 code;			/* The instruction */
-	s32 cycle;
+	u32 cycle;
 	u32 interrupt;
 	u32 intCycle[32];
 } psxRegisters;
 
 extern psxRegisters psxRegs;
 
-#define _i32(x) (long)x
+#if defined(HW_RVL) || defined(HW_DOL) || defined(BIG_ENDIAN)
+
+#define _i32(x) *(s32 *)&x
 #define _u32(x) x
 
-#define _i16(x) (short)x
-#define _u16(x) (unsigned short)x
+#define _i16(x) (((short *)&x)[1])
+#define _u16(x) (((unsigned short *)&x)[1])
 
-#define _i8(x) (char)x
-#define _u8(x) (unsigned char)x
+#define _i8(x) (((char *)&x)[3])
+#define _u8(x) (((unsigned char *)&x)[3])
+
+#else
+
+#define _i32(x) *(s32 *)&x
+#define _u32(x) x
+
+#define _i16(x) *(short *)&x
+#define _u16(x) *(unsigned short *)&x
+
+#define _i8(x) *(char *)&x
+#define _u8(x) *(unsigned char *)&x
+
+#endif
 
 /**** R3000A Instruction Macros ****/
 #define _PC_       psxRegs.pc       // The next PC to be executed
@@ -159,17 +178,17 @@ extern psxRegisters psxRegs;
 #define _fImm_(code)	((s16)code)            // sign-extended immediate
 #define _fImmU_(code)	(code&0xffff)          // zero-extended immediate
 
-#define _Op_     _fOp_(opcode)
-#define _Funct_  _fFunct_(opcode)
-#define _Rd_     _fRd_(opcode)
-#define _Rt_     _fRt_(opcode)
-#define _Rs_     _fRs_(opcode)
-#define _Sa_     _fSa_(opcode)
-#define _Im_     _fIm_(opcode)
-#define _Target_ _fTarget_(opcode)
+#define _Op_     _fOp_(psxRegs.code)
+#define _Funct_  _fFunct_(psxRegs.code)
+#define _Rd_     _fRd_(psxRegs.code)
+#define _Rt_     _fRt_(psxRegs.code)
+#define _Rs_     _fRs_(psxRegs.code)
+#define _Sa_     _fSa_(psxRegs.code)
+#define _Im_     _fIm_(psxRegs.code)
+#define _Target_ _fTarget_(psxRegs.code)
 
-#define _Imm_	 _fImm_(opcode)
-#define _ImmU_	 _fImmU_(opcode)
+#define _Imm_	 _fImm_(psxRegs.code)
+#define _ImmU_	 _fImmU_(psxRegs.code)
 
 #define _rRs_   psxRegs.GPR.r[_Rs_]   // Rs register
 #define _rRt_   psxRegs.GPR.r[_Rt_]   // Rt register
@@ -190,15 +209,16 @@ extern psxRegisters psxRegs;
 
 #define _SetLink(x)     psxRegs.GPR.r[x] = _PC_ + 4;       // Sets the return address in the link register
 
-#define psxCurrentCycle (psxNextCounter - psxRegs.cycle)
-
 int  psxInit();
 void psxReset();
 void psxShutdown();
 void psxException(u32 code, u32 bd);
 void psxBranchTest();
 void psxExecuteBios();
+int  psxTestLoadDelay(int reg, u32 tmp);
 void psxDelayTest(int reg, u32 bpc);
 void psxTestSWInts();
+void psxTestHWInts();
+void psxJumpTest();
 
 #endif /* __R3000A_H__ */

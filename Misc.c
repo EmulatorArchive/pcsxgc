@@ -1,63 +1,39 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <sys/types.h>
-//#include <sys/mman.h>
+/*
+* Miscellaneous functions, including savesates and CD-ROM loading.
+*/
 
-#include "Coff.h"
-#include "PsxCommon.h"
-#include "plugins.h"
+#include "misc.h"
+#include "CdRom.h"
+#include "PsxHw.h"
+#include "Mdec.h"
 
-int Log = 0; // GP
+int Log = 0;
 
-char CdromId[9];
-char CdromLabel[11];
-
-char *LabelAuthors = { N_(
-	"PCSX a psx emulator\n\n"
-	"written by:\n"
-	"main coder: linuzappz\n"
-	"co-coders: shadow\n"
-	"ex-coders: Nocomp, Pete Bernett, nik3d\n"
-	"Webmaster: AkumaX")
-};
-
-char *LabelGreets = { N_(
-	"Greets to: Duddie, Tratax, Kazzuya, JNS, Bobbi, Psychojak, Shunt,\n"
-	"           Keith, DarkWatcher, Xeven, Liquid, Dixon, Prafull\n"
-	"Special thanks to:\n"
-	"Twin (we Love you twin0r), Roor (love for you too),\n"
-	"calb (Thanks for help :) ), now3d (for great help to my psxdev stuff :) )")
-};
-
-PcsxConfig Config;
-
-FILE *emuLog;
-#ifdef GTE_DUMP
-FILE *gteLog;
-#endif
-
-// LOAD STUFF
+/* PSX Executable types */
+#define PSX_EXE     1
+#define CPE_EXE     2
+#define COFF_EXE    3
+#define INVALID_EXE 4
 
 #define ISODCL(from, to) (to - from + 1)
 
@@ -81,7 +57,7 @@ struct iso_directory_record {
 void mmssdd( char *b, char *p )
  {
 	int m, s, d;
-#if defined(__DREAMCAST__) || defined(__MACOSX__) || defined(__GAMECUBE__)
+#if defined(HW_RVL) || defined(HW_DOL) || defined(BIG_ENDIAN)
 	int block = (b[0]&0xff) | ((b[1]&0xff)<<8) | ((b[2]&0xff)<<16) | (b[3]<<24);
 #else
 	int block = *((int*)b);
@@ -127,12 +103,15 @@ void mmssdd( char *b, char *p )
 	READTRACK(); \
 	memcpy(_dir+2048, buf+12, 2048);
 
-int GetCdromFile(u8 *mdir, u8 *time, s8 *filename) {
+int GetCdromFile(u8 *mdir, u8 *time, char *filename) {
 	struct iso_directory_record *dir;
 	char ddir[4096];
 	u8 *buf;
 	int i;
 
+	// only try to scan if a filename is given
+	if(!strlen((char*)filename)) return -1;
+	
 	i = 0;
 	while (i < 4096) {
 		dir = (struct iso_directory_record*) &mdir[i];
@@ -149,8 +128,7 @@ int GetCdromFile(u8 *mdir, u8 *time, s8 *filename) {
 
 				mmssdd(dir->extent, (char*)time);
 				READDIR(ddir);
-				//i = 0;
-				return GetCdromFile((u8*)ddir, time, filename);
+				i = 0;
 			}
 		} else {
 			if (!strnicmp((char*)&dir->name[0], (char*)filename, strlen((char*)filename))) {
@@ -167,8 +145,8 @@ int LoadCdrom() {
 	struct iso_directory_record *dir;
 	u8 time[4],*buf;
 	u8 mdir[4096];
-	s8 exename[256];
-	int i;
+	char exename[256];
+
 
 	if (!Config.HLE) {
 		psxRegs.pc = psxRegs.GPR.n.ra;
@@ -186,34 +164,35 @@ int LoadCdrom() {
 
 	READDIR(mdir);
 
-	if (GetCdromFile(mdir, time, (s8*)"SYSTEM.CNF;1") == -1) {
-		if (GetCdromFile(mdir, time, (s8*)"PSX.EXE;1") == -1) return -1;
+	// Load SYSTEM.CNF and scan for the main executable
+	if (GetCdromFile(mdir, time, "SYSTEM.CNF;1") == -1) {
+		// if SYSTEM.CNF is missing, start an existing PSX.EXE
+		if (GetCdromFile(mdir, time, "PSX.EXE;1") == -1) return -1;
 
 		READTRACK();
 	}
 	else {
+		// read the SYSTEM.CNF
 		READTRACK();
 
-		sscanf((char*)buf+12, "BOOT = cdrom:\\%s", exename);
+		sscanf((char*)buf+12, "BOOT = cdrom:\\%256s", exename);
 		if (GetCdromFile(mdir, time, exename) == -1) {
-			sscanf((char*)buf+12, "BOOT = cdrom:%s", exename);
+			sscanf((char*)buf+12, "BOOT = cdrom:%256s", exename);
 			if (GetCdromFile(mdir, time, exename) == -1) {
 				char *ptr = strstr((char*)buf+12, "cdrom:");
-				if (!ptr)
-					return -1;
-				for (i=0; i<32; i++) {
-					if (ptr[i] == ' ') continue;
-					if (ptr[i] == '\\') continue;
+				if(ptr) {
+					strncpy(exename, ptr, 256);
+					if (GetCdromFile(mdir, time, exename) == -1)
+						return -1;
 				}
-				strncpy((char*)exename, ptr, 255);
-				if (GetCdromFile(mdir, time, exename) == -1)
-					return -1;
 			}
 		}
 
+		// Read the EXE-Header
 		READTRACK();
 	}
 
+	
 	memcpy(&tmpHead, buf+12, sizeof(EXE_HEADER));
 
 	psxRegs.pc = SWAP32(tmpHead.pc0);
@@ -221,16 +200,20 @@ int LoadCdrom() {
 	psxRegs.GPR.n.sp = SWAP32(tmpHead.s_addr); 
 	if (psxRegs.GPR.n.sp == 0) psxRegs.GPR.n.sp = 0x801fff00;
 
-	while (SWAPu32(tmpHead.t_size)) {
-		void *ptr = (void *)PSXM(SWAP32(tmpHead.t_addr));
+	tmpHead.t_size = SWAP32(tmpHead.t_size);
+	tmpHead.t_addr = SWAP32(tmpHead.t_addr);
+
+	// Read the rest of the main executable
+	while (tmpHead.t_size) {
+		void *ptr = (void *)PSXM(tmpHead.t_addr);
 
 		incTime();
 		READTRACK();
 
 		if (ptr != NULL) memcpy(ptr, buf+12, 2048);
 
-		tmpHead.t_size = SWAPu32(SWAPu32(tmpHead.t_size) - 2048);
-		tmpHead.t_addr = SWAPu32(SWAPu32(tmpHead.t_addr) + 2048);
+		tmpHead.t_size -= 2048;
+		tmpHead.t_addr += 2048;
 	}
 
 	return 0;
@@ -242,7 +225,7 @@ int LoadCdromFile(char *filename, EXE_HEADER *head) {
 	u8 mdir[4096], exename[256];
 	u32 size, addr;
 
-	sscanf(filename, "cdrom:\\%s", exename);
+	sscanf(filename, "cdrom:\\%256s", exename);
 
 	time[0] = itob(0); time[1] = itob(2); time[2] = itob(0x10);
 
@@ -255,19 +238,19 @@ int LoadCdromFile(char *filename, EXE_HEADER *head) {
 
 	READDIR(mdir);
 
-	if (GetCdromFile(mdir, time, (s8*)exename) == -1) return -1;
+	if (GetCdromFile(mdir, time, (char*)exename) == -1) return -1;
 
 	READTRACK();
 
 	memcpy(head, buf+12, sizeof(EXE_HEADER));
-	size = SWAP32(head->t_size);
-	addr = SWAP32(head->t_addr);
+	size = head->t_size;
+	addr = head->t_addr;
 
 	while (size) {
 		incTime();
 		READTRACK();
 
-		memcpy((void *)PSXM(addr), buf+12, 2048);
+		memcpy((u8*)(psxMemRLUT[(addr) >> 16] + ((addr) & 0xffff)), (char*)buf+12, 2048);
 
 		size -= 2048;
 		addr += 2048;
@@ -287,7 +270,10 @@ int CheckCdrom() {
 
 	READTRACK();
 
-	strncpy(CdromLabel, (char*)buf+52, 11);
+	CdromLabel[32]=0;
+	CdromId[9]=0;
+
+	strncpy(CdromLabel, (char*)buf+52, 32);
 
 	// skip head and sub, and go to the root directory record
 	dir = (struct iso_directory_record*) &buf[12+156]; 
@@ -296,26 +282,27 @@ int CheckCdrom() {
 
 	READDIR(mdir);
 
-	if (GetCdromFile(mdir, time, (s8*)"SYSTEM.CNF;1") != -1) {
+	if (GetCdromFile(mdir, time, "SYSTEM.CNF;1") != -1) {
 		READTRACK();
 
-		sscanf((char*)buf+12, "BOOT = cdrom:\\%s", exename);
-		if (GetCdromFile(mdir, time, (s8*)exename) == -1) {
-			sscanf((char*)buf+12, "BOOT = cdrom:%s", exename);
-			if (GetCdromFile(mdir, time, (s8*)exename) == -1) {
-				char *ptr = strstr((char*)buf+12, "cdrom:");
-				if (!ptr)
-					return -1;
+		sscanf((char*)buf+12, "BOOT = cdrom:\\%256s", exename);
+		if (GetCdromFile(mdir, time, exename) == -1) {
+			sscanf((char*)buf+12, "BOOT = cdrom:%256s", exename);
+			if (GetCdromFile(mdir, time, exename) == -1) {
+				char *ptr = strstr((char*)buf+12, "cdrom:");			// possibly the executable is in some subdir
 				for (i=0; i<32; i++) {
 					if (ptr[i] == ' ') continue;
 					if (ptr[i] == '\\') continue;
 				}
-				strncpy(exename, ptr, 255);
-				if (GetCdromFile(mdir, time, (s8*)exename) == -1)
-					return 0;
+				if(ptr) {
+					strncpy(exename, ptr, 256);
+					if (GetCdromFile(mdir, time, exename) == -1)
+				 	return -1;		// main executable not found
+				}
 			}
 		}
-	}
+	} else
+		return -1;		// SYSTEM.CNF not found
 
 	i = strlen(exename);
 	if (i >= 2) {
@@ -334,22 +321,17 @@ int CheckCdrom() {
 	}
 	psxUpdateVSyncRate();
 	if (CdromLabel[0] == ' ') {
-		strcpy(CdromLabel, CdromId);
+		strncpy(CdromLabel, CdromId, 9);
 	}
-	SysPrintf("*PCSX*: CdromLabel: %s\n", CdromLabel);
-	SysPrintf("*PCSX*: CdromId: %s\n", CdromId);
+	SysPrintf("CD-ROM Label: %.32s\n", CdromLabel);
+	SysPrintf("CD-ROM ID: %.9s\n", CdromId);
 
 	return 0;
 }
 
-#define PSX_EXE     1
-#define CPE_EXE     2
-#define COFF_EXE    3
-#define INVALID_EXE 4
-
 static int PSXGetFileType(FILE *f) {
     unsigned long current;
-    unsigned long mybuf[2048];
+    u32 mybuf[2048];
     EXE_HEADER *exe_hdr;
     FILHDR *coff_hdr;
 
@@ -365,61 +347,70 @@ static int PSXGetFileType(FILE *f) {
     if (mybuf[0]=='C' && mybuf[1]=='P' && mybuf[2]=='E')
         return CPE_EXE;
 
-    coff_hdr = (void *)mybuf;
-    if (coff_hdr->f_magic == SWAP16(0x0162))
+    coff_hdr = (FILHDR*)mybuf;
+    if (coff_hdr->f_magic == 0x0162)
         return COFF_EXE;
 
     return INVALID_EXE;
 }
 
+/* TODO Error handling - return integer for each error case below, defined in an enum. Pass variable on return */
 int Load(char *ExePath) {
 	FILE *tmpFile;
 	EXE_HEADER tmpHead;
 	int type;
+	int retval = 0;
 
 	strncpy(CdromId, "SLUS99999", 9);
 	strncpy(CdromLabel, "SLUS_999.99", 11);
 
-	tmpFile = fopen(ExePath,"rb");
-	if (tmpFile == NULL) { SysMessage(_("Error opening file: %s"), ExePath); return 0; }
-
-    type = PSXGetFileType(tmpFile);
-    switch (type) {
-    	case PSX_EXE:
-			fread(&tmpHead,sizeof(EXE_HEADER),1,tmpFile);
-			fseek(tmpFile, 0x800, SEEK_SET);		
-			fread((void *)PSXM(tmpHead.t_addr), tmpHead.t_size,1,tmpFile);
-			fclose(tmpFile);
-			psxRegs.pc = SWAP32(tmpHead.pc0);
-			psxRegs.GPR.n.gp = SWAP32(tmpHead.gp0);
-			psxRegs.GPR.n.sp = SWAP32(tmpHead.s_addr); 
-			if (psxRegs.GPR.n.sp == 0) psxRegs.GPR.n.sp = 0x801fff00;
-			break;
-    	case CPE_EXE:
-    		SysMessage(_("Pcsx found that you wanna use a CPE file. CPE files not supported"));
-			break;
-    	case COFF_EXE:
-    		SysMessage(_("Pcsx found that you wanna use a COFF file. COFF files not supported"));
-			break;
-    	case INVALID_EXE:
-    		SysMessage(_("This file is not a psx file"));
-			break;
+    tmpFile = fopen(ExePath,"rb");
+	if (tmpFile == NULL) {
+		SysMessage(_("Error opening file: %s"), ExePath);
+		retval = 0;
+	} else {
+		type = PSXGetFileType(tmpFile);
+		switch (type) {
+			case PSX_EXE:
+				fread(&tmpHead,sizeof(EXE_HEADER),1,tmpFile);
+				fseek(tmpFile, 0x800, SEEK_SET);		
+				fread((void *)PSXM(SWAP32(tmpHead.t_addr)), SWAP32(tmpHead.t_size),1,tmpFile);
+				fclose(tmpFile);
+				psxRegs.pc = SWAP32(tmpHead.pc0);
+				psxRegs.GPR.n.gp = SWAP32(tmpHead.gp0);
+				psxRegs.GPR.n.sp = SWAP32(tmpHead.s_addr); 
+				if (psxRegs.GPR.n.sp == 0)
+					psxRegs.GPR.n.sp = 0x801fff00;
+				retval = 0;
+				break;
+			case CPE_EXE:
+				SysMessage(_("CPE files not supported."));
+				retval = -1;
+				break;
+			case COFF_EXE:
+				SysMessage(_("COFF files not supported."));
+				retval = -1;
+				break;
+			case INVALID_EXE:
+				SysMessage(_("This file does not appear to be a valid PSX file."));
+				retval = -1;
+				break;
+		}
 	}
-	return 1;
+	return retval;
 }
 
 // STATES
 
-const char PcsxHeader[32] = "STv3 PCSX v 1.5t3";
+const char PcsxHeader[32] = "STv3 PCSX v";
 
-int SaveState(const char *file) {
+int SaveState(char *file) {
 	gzFile f;
 	GPUFreeze_t *gpufP;
 	SPUFreeze_t *spufP;
 	int Size;
 	unsigned char *pMem;
-	int i;
- 
+
 	f = gzopen(file, "wb");
 	if (f == NULL) return -1;
 
@@ -430,85 +421,32 @@ int SaveState(const char *file) {
 	GPU_getScreenPic(pMem);
 	gzwrite(f, pMem, 128*96*3);
 	free(pMem);
-	
-	psxBiosFreeze(1);
-	
+
+	if (Config.HLE)
+		psxBiosFreeze(1);
+
 	gzwrite(f, psxM, 0x00200000);
 	gzwrite(f, psxR, 0x00080000);
 	gzwrite(f, psxH, 0x00010000);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	{
-		psxRegisters tmpRegs;
-
-		for (i=0; i<sizeof(psxGPRRegs)/4; i++)
-			tmpRegs.GPR.r[i] = SWAP32p((u32*)&psxRegs.GPR.r[i]);
-		for (i=0; i<sizeof(psxCP0Regs)/4; i++)
-			tmpRegs.CP0.r[i] = SWAP32p((u32*)&psxRegs.CP0.r[i]);
-		for (i=0; i<sizeof(psxCP2Data)/4; i++)
-			tmpRegs.CP2D.r[i] = SWAP32p((u32*)&psxRegs.CP2D.r[i]);
-		for (i=0; i<sizeof(psxCP2Ctrl)/4; i++)
-			tmpRegs.CP2C.r[i] = SWAP32p((u32*)&psxRegs.CP2C.r[i]);
-		tmpRegs.pc = SWAP32p(&psxRegs.pc);
-		tmpRegs.code = SWAP32p(&psxRegs.code);
-		tmpRegs.cycle = SWAP32(psxCurrentCycle);
-		tmpRegs.interrupt = SWAP32p(&psxRegs.interrupt);
-		for (i=0; i<32; i++)
-			tmpRegs.intCycle[i] = SWAP32p(&psxRegs.intCycle[i]);
-		gzwrite(f, (void*)&tmpRegs, sizeof(tmpRegs));
-	}
-#else
 	gzwrite(f, (void*)&psxRegs, sizeof(psxRegs));
-#endif
 
 	// gpu
 	gpufP = (GPUFreeze_t *) malloc(sizeof(GPUFreeze_t));
 	gpufP->ulFreezeVersion = 1;
 	GPU_freeze(1, gpufP);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	gpufP->ulFreezeVersion = SWAP32p((void*)&gpufP->ulFreezeVersion);
-	gpufP->ulStatus = SWAP32p((void*)&gpufP->ulStatus);
-	//for (i=0; i<256; i++)
-	//	gpufP->ulControl[i] = SWAP32p(&gpufP->ulControl[i]);
-#endif
 	gzwrite(f, gpufP, sizeof(GPUFreeze_t));
 	free(gpufP);
 
 	// spu
-/*
 	spufP = (SPUFreeze_t *) malloc(16);
 	SPU_freeze(2, spufP);
-	Size = spufP->Size;
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	spufP->Size = SWAP32p((void*)&spufP->Size);
-#endif
-	gzwrite(f, &spufP->Size, 4);
+	Size = spufP->Size; gzwrite(f, &Size, 4);
 	free(spufP);
 	spufP = (SPUFreeze_t *) malloc(Size);
 	SPU_freeze(1, spufP);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	spufP->PluginVersion = SWAP32p((void*)&spufP->PluginVersion);
-	spufP->Size = SWAP32p((void*)&spufP->Size);
-	
-	{
-		xa_decode_t tmpXa;
-		memcpy(&tmpXa, &spufP->xa, sizeof(xa_decode_t));
-		spufP->xa = tmpXa;
-		
-		spufP->xa.freq = SWAP32p((u32*)&spufP->xa.freq);
-		spufP->xa.nbits = SWAP32p((u32*)&spufP->xa.nbits);
-		spufP->xa.stereo = SWAP32p((u32*)&spufP->xa.stereo);
-		spufP->xa.nsamples = SWAP32p((u32*)&spufP->xa.nsamples);
-		spufP->xa.left.y0 = SWAP32p((void*)&spufP->xa.left.y0);
-		spufP->xa.left.y1 = SWAP32p((void*)&spufP->xa.left.y1);
-		spufP->xa.right.y0 = SWAP32p((void*)&spufP->xa.right.y0);
-		spufP->xa.right.y1 = SWAP32p((void*)&spufP->xa.right.y1);
-		for (i=0; i<16384; i++)
-			spufP->xa.pcm[i] = SWAP16p((void*)&spufP->xa.pcm[i]);
-	}
-#endif
 	gzwrite(f, spufP, Size);
 	free(spufP);
-*/
+
 	sioFreeze(f, 1);
 	cdrFreeze(f, 1);
 	psxHwFreeze(f, 1);
@@ -520,13 +458,12 @@ int SaveState(const char *file) {
 	return 0;
 }
 
-int LoadState(const char *file) {
+int LoadState(char *file) {
 	gzFile f;
 	GPUFreeze_t *gpufP;
 	SPUFreeze_t *spufP;
 	int Size;
 	char header[32];
-	int i;
 
 	f = gzopen(file, "rb");
 	if (f == NULL) return -1;
@@ -540,71 +477,23 @@ int LoadState(const char *file) {
 	gzseek(f, 128*96*3, SEEK_CUR);
 
 	gzread(f, psxM, 0x00200000);
-	//mprotect(psxR, 0x00080000, PROT_READ|PROT_WRITE);
 	gzread(f, psxR, 0x00080000);
-	//mprotect(psxR, 0x00080000, PROT_READ);
 	gzread(f, psxH, 0x00010000);
-
 	gzread(f, (void*)&psxRegs, sizeof(psxRegs));
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	{
-		for (i=0; i<sizeof(psxGPRRegs)/4; i++)
-			psxRegs.GPR.r[i] = SWAP32p((u32*)&psxRegs.GPR.r[i]);
-		for (i=0; i<sizeof(psxCP0Regs)/4; i++)
-			psxRegs.CP0.r[i] = SWAP32p((u32*)&psxRegs.CP0.r[i]);
-		for (i=0; i<sizeof(psxCP2Data)/4; i++)
-			psxRegs.CP2D.r[i] = SWAP32p((u32*)&psxRegs.CP2D.r[i]);
-		for (i=0; i<sizeof(psxCP2Ctrl)/4; i++)
-			psxRegs.CP2C.r[i] = SWAP32p((u32*)&psxRegs.CP2C.r[i]);
-		psxRegs.pc = SWAP32p(&psxRegs.pc);
-		psxRegs.code = SWAP32p(&psxRegs.code);
-		psxRegs.cycle = SWAP32p((u32*)&psxRegs.cycle);
-		psxRegs.interrupt = SWAP32p(&psxRegs.interrupt);
-		for (i=0; i<32; i++)
-			psxRegs.intCycle[i] = SWAP32p(&psxRegs.intCycle[i]);
-	}
-#endif
+
+	if (Config.HLE)
+		psxBiosFreeze(0);
 
 	// gpu
 	gpufP = (GPUFreeze_t *) malloc (sizeof(GPUFreeze_t));
 	gzread(f, gpufP, sizeof(GPUFreeze_t));
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	gpufP->ulFreezeVersion = SWAP32p((void*)&gpufP->ulFreezeVersion);
-	gpufP->ulStatus = SWAP32p((void*)&gpufP->ulStatus);
-	//for (i=0; i<256; i++)
-	//	gpufP->ulControl[i] = SWAP32p(&gpufP->ulControl[i]);
-#endif
 	GPU_freeze(0, gpufP);
 	free(gpufP);
 
 	// spu
-/*	gzread(f, &Size, 4);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	Size = SWAP32(Size);
-#endif
+	gzread(f, &Size, 4);
 	spufP = (SPUFreeze_t *) malloc (Size);
 	gzread(f, spufP, Size);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	spufP->PluginVersion = SWAP32p((void*)&spufP->PluginVersion);
-	spufP->Size = SWAP32p((void*)&spufP->Size);
-	
-	{
-		xa_decode_t tmpXa;
-		memcpy(&tmpXa, &spufP->xa, sizeof(xa_decode_t));
-		spufP->xa = tmpXa;
-		
-		spufP->xa.freq = SWAP32p((u32*)&spufP->xa.freq);
-		spufP->xa.nbits = SWAP32p((u32*)&spufP->xa.nbits);
-		spufP->xa.stereo = SWAP32p((u32*)&spufP->xa.stereo);
-		spufP->xa.nsamples = SWAP32p((u32*)&spufP->xa.nsamples);
-		spufP->xa.left.y0 = SWAP32p((void*)&spufP->xa.left.y0);
-		spufP->xa.left.y1 = SWAP32p((void*)&spufP->xa.left.y1);
-		spufP->xa.right.y0 = SWAP32p((void*)&spufP->xa.right.y0);
-		spufP->xa.right.y1 = SWAP32p((void*)&spufP->xa.right.y1);
-		for (i=0; i<16384; i++)
-			spufP->xa.pcm[i] = SWAP16p((void*)&spufP->xa.pcm[i]);
-	}
-#endif*/
 	SPU_freeze(0, spufP);
 	free(spufP);
 
@@ -613,24 +502,20 @@ int LoadState(const char *file) {
 	psxHwFreeze(f, 0);
 	psxRcntFreeze(f, 0);
 	mdecFreeze(f, 0);
-	
-	psxBiosFreeze(0);
-	
+
 	gzclose(f);
-	
-	TimedInterruptsReset(psxRegs.cycle);
-	
+
 	return 0;
 }
 
-int CheckState(const char *file) {
+int CheckState(char *file) {
 	gzFile f;
 	char header[32];
 
 	f = gzopen(file, "rb");
 	if (f == NULL) return -1;
 
-	//psxCpu->Reset();
+	psxCpu->Reset();
 
 	gzread(f, header, 32);
 
@@ -710,44 +595,10 @@ void __Log(char *fmt, ...) {
 	va_start(list, fmt);
 #ifndef LOG_STDOUT
 	vfprintf(emuLog, fmt, list);
-	fflush(emuLog);
 #else
 	vsprintf(tmp, fmt, list);
 	SysPrintf(tmp);
 #endif
 	va_end(list);
-}
-
-typedef struct {
-	char id[8];
-	char name[64];
-} LangDef;
-
-LangDef sLangs[] = {
-	{ "ar", N_("Arabic") },
-	{ "ca", N_("Catalan") },
-	{ "de", N_("German") },
-	{ "el", N_("Greek") },
-	{ "en", N_("English") },
-	{ "es", N_("Spanish") },
-	{ "fr", N_("French") },
-	{ "it", N_("Italian") },
-	{ "pt", N_("Portuguese") },
-	{ "ro", N_("Romanian") },
-	{ "ru", N_("Russian") },
-	{ "", "" },
-};
-
-
-char *ParseLang(char *id) {
-	int i=0;
-
-	while (sLangs[i].id[0] != 0) {
-		if (!strcmp(id, sLangs[i].id))
-			return _(sLangs[i].name);
-		i++;
-	}
-
-	return id;
 }
 

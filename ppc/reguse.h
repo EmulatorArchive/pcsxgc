@@ -3,7 +3,7 @@
 #define __REGUSE_H__
 
 // include basic types
-#include "PsxCommon.h"
+#include "../psxcommon.h"
 
 #define REGUSE_NONE    0x0000
 #define REGUSE_UNKNOWN 0x0001
@@ -70,8 +70,8 @@
 #define REGUSE_WRITE  2
 #define REGUSE_RW     3
 
-int useOfPsxReg(u32 code, int use, int psxreg);// __attribute__ ((__pure__));;
-int nextPsxRegUse(u32 pc, int psxreg);// __attribute__ ((__pure__));;
-int isPsxRegUsed(u32 pc, int psxreg);// __attribute__ ((__pure__));;
+int useOfPsxReg(u32 code, int use, int psxreg) __attribute__ ((__pure__));;
+int nextPsxRegUse(u32 pc, int psxreg) __attribute__ ((__pure__));;
+int isPsxRegUsed(u32 pc, int psxreg) __attribute__ ((__pure__));;
 
 #endif /* __REGUSE_H__ */

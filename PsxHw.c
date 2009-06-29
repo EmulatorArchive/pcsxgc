@@ -1,35 +1,35 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
+/*
+* Functions for PSX hardware control.
+*/
 
-#include "PsxCommon.h"
-
-#ifdef _MSC_VER_
-#pragma warning(disable:4244)
-#endif
+#include "psxhw.h"
+#include "Mdec.h"
+#include "CdRom.h"
 
 void psxHwReset() {
-	if (Config.Sio) psxHu32ref(0x1070) |= 0x80;
-	if (Config.SpuIrq) psxHu32ref(0x1070) |= 0x200;
-	psxExceptionTest();
-	
+    if (Config.Sio) psxHu32ref(0x1070) |= SWAP32(0x80);
+    if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAP32(0x200);
+
 	memset(psxH, 0, 0x10000);
 
 	mdecInit(); //intialize mdec decoder
@@ -325,7 +325,7 @@ u32 psxHwRead32(u32 add) {
 		default:
 			hard = psxHu32(add); 
 #ifdef PSXHW_LOG
-			PSXHW_LOG("*Unknown 32bit read at address %lx\n", add);
+			PSXHW_LOG("*Unkwnown 32bit read at address %lx\n", add);
 #endif
 			return hard;
 	}
@@ -403,14 +403,15 @@ void psxHwWrite16(u32 add, u16 value) {
 			if (Config.Sio) psxHu16ref(0x1070) |= SWAPu16(0x80);
 			if (Config.SpuIrq) psxHu16ref(0x1070) |= SWAPu16(0x200);
 			psxHu16ref(0x1070) &= SWAPu16((psxHu16(0x1074) & value));
-			psxExceptionTest();
 			return;
+
+		case 0x1f801074:
 #ifdef PSXHW_LOG
-		case 0x1f801074: PSXHW_LOG("IMASK 16bit write %x\n", value);
-			psxHu16ref(0x1074) = SWAPu16(value);
-			psxExceptionTest();
-			return;
+			PSXHW_LOG("IMASK 16bit write %x\n", value);
 #endif
+			psxHu16ref(0x1074) = SWAPu16(value);
+			psxRegs.interrupt|= 0x80000000;
+			return;
 
 		case 0x1f801100:
 #ifdef PSXHW_LOG
@@ -482,7 +483,7 @@ void psxHwWrite16(u32 add, u16 value) {
 	if (SWAPu32(HW_DMA##n##_CHCR) & 0x01000000) return; \
 	HW_DMA##n##_CHCR = SWAPu32(value); \
  \
-	if ((value & 0x01000000) && (SWAPu32(HW_DMA_PCR) & (8 << (n * 4)))) { \
+	if (SWAPu32(HW_DMA##n##_CHCR) & 0x01000000 && SWAPu32(HW_DMA_PCR) & (8 << (n * 4))) { \
 		psxDma##n(SWAPu32(HW_DMA##n##_MADR), SWAPu32(HW_DMA##n##_BCR), SWAPu32(HW_DMA##n##_CHCR)); \
 	} \
 }
@@ -513,15 +514,14 @@ void psxHwWrite32(u32 add, u32 value) {
 			if (Config.Sio) psxHu32ref(0x1070) |= SWAPu32(0x80);
 			if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAPu32(0x200);
 			psxHu32ref(0x1070) &= SWAPu32((psxHu32(0x1074) & value));
-			psxExceptionTest();
 			return;
-#ifdef PSXHW_LOG
 		case 0x1f801074:
+#ifdef PSXHW_LOG
 			PSXHW_LOG("IMASK 32bit write %lx\n", value);
-			psxHu32ref(0x1074) = SWAPu32(value);
-			psxExceptionTest();
-			return;
 #endif
+			psxHu32ref(0x1074) = SWAPu32(value);
+			psxRegs.interrupt|= 0x80000000;
+			return;
 
 #ifdef PSXHW_LOG
 		case 0x1f801080:
@@ -667,7 +667,7 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 0 TARGET 32bit write %lx\n", value);
 #endif
-			psxRcntWtarget(0, value & 0xffff); return; //  HW_DMA_ICR&= (~value)&0xff000000;
+			psxRcntWtarget(0, value & 0xffff); return; //  HW_DMA_ICR&= SWAP32((~value)&0xff000000);
 
 		case 0x1f801110:
 #ifdef PSXHW_LOG

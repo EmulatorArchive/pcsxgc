@@ -1,94 +1,76 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
+
+/* 
+* This file contains common definitions and includes for all parts of the 
+* emulator core.
+*/
 
 #ifndef __PSXCOMMON_H__
 #define __PSXCOMMON_H__
-#include <gccore.h>
+
+//#include "config.h"
+
+/* System includes */
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <errno.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <math.h>
 #include <time.h>
-#include "System.h"
-#if defined(__DREAMCAST__)
-#include <zlib/zlib.h>
-#else
-#include <zlib.h>
-#endif
-
-#if defined(_MSC_VER_)
-
-#include <windows.h>
-
-typedef struct {
-	HWND hWnd;           // Main window handle
-	HINSTANCE hInstance; // Application instance
-	HMENU hMenu;         // Main window menu
-} AppData;
-
-#elif defined (__LINUX__) || defined (__MACOSX__) || defined(__GAMECUBE__)
-
+#include <ctype.h>
 #include <sys/types.h>
+#include <zlib.h>
+//#include <glib.h>
 
-#define __inline inline
+/* Define types */
+/*typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
+typedef int64_t s64;
+typedef intptr_t sptr;
 
-#endif
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef uintptr_t uptr;
+*/
+/* Local includes */
+#include "system.h"
+#include "debug.h"
 
-#if defined (__LINUX__) || defined (__MACOSX__) || defined(__GAMECUBE__)
+/* Ryan TODO WTF is this? */
+#if defined (__LINUX__) || defined (__MACOSX__) || defined(HW_RVL) || defined(HW_DOL)
 #define strnicmp strncasecmp
 #endif
+#define __inline inline
 
-// Basic types
-#if defined(_MSC_VER_)
-
-typedef __int8  s8;
-typedef __int16 s16;
-typedef __int32 s32;
-typedef __int64 s64;
-
-typedef unsigned __int8  u8;
-typedef unsigned __int16 u16;
-typedef unsigned __int32 u32;
-typedef unsigned __int64 u64;
-
-#elif defined(__LINUX__) || defined(__DREAMCAST__) || \
-	  defined(__MINGW32__) || defined(__MACOSX__)
-
-typedef char s8;
-typedef short s16;
-typedef long s32;
-typedef long long s64;
-
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned long u32;
-typedef unsigned long long u64;
-
-#endif
-
+/* Enables NLS/internationalization if active */
 #ifdef ENABLE_NLS
 
 #include <libintl.h>
 
 #undef _
-#define _(String) dgettext (PACKAGE, String)
+#define _(String) gettext(String)
 #ifdef gettext_noop
 #  define N_(String) gettext_noop (String)
 #else
@@ -115,28 +97,25 @@ typedef struct {
 	char Mcd1[256];
 	char Mcd2[256];
 	char Bios[256];
-	char BiosDir[256];
-	char BiosFont[256];
-	char PluginsDir[256];
-	char Lang[256];
+	char BiosDir[MAXPATHLEN];
+	char PluginsDir[MAXPATHLEN];
 	long Xa;
 	long Sio;
 	long Mdec;
 	long PsxAuto;
-	long PsxType; // ntsc - 0 | pal - 1
-	long QKeys;
+	long PsxType;		/* NTSC or PAL */
 	long Cdda;
 	long HLE;
 	long Cpu;
+	long Dbg;
 	long PsxOut;
 	long SpuIrq;
 	long RCntFix;
 	long UseNet;
 	long VSyncWA;
-	long CpuBias;
 } PcsxConfig;
 
-extern PcsxConfig Config;
+PcsxConfig Config;
 
 extern long LoadCdBios;
 extern int StatesC;
@@ -147,42 +126,21 @@ extern int NetOpened;
 	if (Mode == 1) gzwrite(f, ptr, size); \
 	if (Mode == 0) gzread(f, ptr, size);
 
-#define gzfreezel(ptr) \
-{  /*if (sizeof(ptr)==2) {*(unsigned short *)ptr = SWAP16p((unsigned short *)ptr); gzfreeze(ptr, 2); *(unsigned short *)ptr = SWAP16p((unsigned short *)ptr); } \
-	else if (sizeof(ptr)==4) {*(unsigned long *)ptr = SWAP32p((unsigned long *)ptr); gzfreeze(ptr, 4); *(unsigned long *)ptr = SWAP32p((unsigned long *)ptr); } \
-	else*/ {gzfreeze(ptr, sizeof(ptr)); } }
+#define gzfreezel(ptr) gzfreeze(ptr, sizeof(ptr))
 
 //#define BIAS	4
-#define BIAS	Config.CpuBias
+#define BIAS	2
 #define PSXCLK	33868800	/* 33.8688 Mhz */
 
-#include "IntManager.h"
-#include "R3000A.h"
-#include "PsxMem.h"
-#include "PsxHw.h"
-#include "PsxBios.h"
-#include "PsxDma.h"
-#include "PsxCounters.h"
-#include "PsxHLE.h"
-#include "Mdec.h"
-#include "CdRom.h"
-#include "Sio.h"
-#include "Spu.h"
-#include "plugins.h"
-#include "Decode_XA.h"
-#include "Misc.h"
-#include "Debug.h"
-#include "Gte.h"
-extern void SysPrintf(char *fmt, ...);
-extern void SysMessage(char *fmt, ...);
-extern void SysReset();
-extern void *SysLoadLibrary(char *lib);
-extern void *SysLoadSym(void *lib, char *sym);
-extern char *SysLibError();
-extern void SysCloseLibrary(void *lib);
-extern void SysUpdate();
-extern void SysRunGui();
-extern void SysClose();
-extern int SysInit();
+enum {
+	BIOS_USER_DEFINED,
+	BIOS_HLE
+};	/* BIOS Types */
+
+enum {
+	PSX_TYPE_NTSC,
+	PSX_TYPE_PAL
+};	/* PSX Type */
+
 
 #endif /* __PSXCOMMON_H__ */

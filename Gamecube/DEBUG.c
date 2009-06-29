@@ -2,6 +2,7 @@
    by Mike Slegeir for Mupen64-GC
  */
 
+#include <gccore.h>
 #include <string.h>
 #include <stdio.h>
 #include <fat.h>
@@ -21,12 +22,7 @@ long long texttimes[DEBUG_TEXT_HEIGHT];
 extern long long gettime();
 extern unsigned int diff_sec(long long start,long long end);
 static void check_heap_space(void){
-	int space = 64 * 1024 * 1024, *ptr=NULL;
-	while(space > 0)
-		if((ptr = malloc(space))) break;
-		else space -= 4096;
-	if(ptr) free(ptr);
-	sprintf(txtbuffer,"At least %dKB or %dMB space available", space/1024, space/1024/1024);
+	sprintf(txtbuffer,"%dKB MEM1 available", SYS_GetArena1Size()/1024);
 	DEBUG_print(txtbuffer,DBG_MEMFREEINFO);
 
 }

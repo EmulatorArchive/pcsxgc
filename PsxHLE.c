@@ -1,44 +1,57 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
+/*
+* Internal PSX HLE functions.
+*/
 
-#include "PsxCommon.h"
+#include "psxhle.h"
 
 static void hleDummy() {
 	psxRegs.pc = psxRegs.GPR.n.ra;
+
+	psxBranchTest();
 }
 
 static void hleA0() {
 	u32 call = psxRegs.GPR.n.t1 & 0xff;
 
 	if (biosA0[call]) biosA0[call]();
+
+	psxBranchTest();
 }
 
 static void hleB0() {
 	u32 call = psxRegs.GPR.n.t1 & 0xff;
 
 	if (biosB0[call]) biosB0[call]();
+
+	psxBranchTest();
 }
 
 static void hleC0() {
 	u32 call = psxRegs.GPR.n.t1 & 0xff;
 
 	if (biosC0[call]) biosC0[call]();
+
+	psxBranchTest();
 }
 
 static void hleBootstrap() { // 0xbfc00000
@@ -49,17 +62,17 @@ static void hleBootstrap() { // 0xbfc00000
 }
 
 typedef struct {                   
-	unsigned long _pc0;      
-	unsigned long gp0;      
-	unsigned long t_addr;   
-	unsigned long t_size;   
-	unsigned long d_addr;   
-	unsigned long d_size;   
-	unsigned long b_addr;   
-	unsigned long b_size;   
-	unsigned long S_addr;
-	unsigned long s_size;
-	unsigned long _sp,_fp,_gp,ret,base;
+	u32 _pc0;      
+	u32 gp0;      
+	u32 t_addr;   
+	u32 t_size;   
+	u32 d_addr;   
+	u32 d_size;   
+	u32 b_addr;   
+	u32 b_size;   
+	u32 S_addr;
+	u32 s_size;
+	u32 _sp,_fp,_gp,ret,base;
 } EXEC;
 
 static void hleExecRet() {

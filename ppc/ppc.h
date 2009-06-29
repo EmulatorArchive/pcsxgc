@@ -1,17 +1,17 @@
 /*
- * ix86 definitions v0.5.1
+ * ppc definitions v0.5.1
  *  Authors: linuzappz <linuzappz@pcsx.net>
  *           alexey silinov
  */
 
-#ifndef __IX86_H__
-#define __IX86_H__
+#ifndef __PPC_H__
+#define __PPC_H__
 
 // include basic types
-#include "PsxCommon.h"
+#include "../psxcommon.h"
 #include "ppc_mnemonics.h"
 
-#define NUM_HW_REGISTERS 29
+#define NUM_HW_REGISTERS 28
 
 /* general defines */
 #define write8(val)  *(u8 *)ppcPtr = val; ppcPtr++;
@@ -45,12 +45,12 @@ void ppcShutdown();
 void ppcAlign(int bytes);
 void returnPC();
 void recRun(void (*func)(), u32 hw1, u32 hw2);
-extern u8 dynMemRead8(u32 mem);
-extern u16 dynMemRead16(u32 mem);
-extern u32 dynMemRead32(u32 mem);
-extern void dynMemWrite32(u32 mem, u32 val);
+u8 dynMemRead8(u32 mem);
+u16 dynMemRead16(u32 mem);
+u32 dynMemRead32(u32 mem);
+void dynMemWrite32(u32 mem, u32 val);
 
-#endif /* __IX86_H__ */
+#endif /* __PPC_H__ */
 
 
 

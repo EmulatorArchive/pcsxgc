@@ -1,65 +1,66 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdarg.h>
-//THIS ALL IS FOR THE CDROM REGISTERS HANDLING
-#include "PsxCommon.h"
+/* 
+* Handles all CD-ROM registers and functions.
+*/
 
+#include "cdrom.h"
+
+/* CD-ROM magic numbers */
 #define CdlSync         0
 #define CdlNop	        1
-#define CdlSetloc		2
+#define CdlSetloc	2
 #define CdlPlay	        3
-#define CdlForward		4
-#define CdlBackward		5
-#define CdlReadN		6
-#define CdlStandby		7
+#define CdlForward	4
+#define CdlBackward	5
+#define CdlReadN	6
+#define CdlStandby	7
 #define CdlStop	        8
 #define CdlPause        9
-#define CdlInit 		10
+#define CdlInit 	10
 #define CdlMute	        11
-#define CdlDemute		12
+#define CdlDemute	12
 #define CdlSetfilter	13
-#define CdlSetmode		14
+#define CdlSetmode	14
 #define CdlGetmode      15
-#define CdlGetlocL		16
-#define CdlGetlocP		17
-#define Cdl18     		18
-#define CdlGetTN		19
-#define CdlGetTD		20
-#define CdlSeekL		21
-#define CdlSeekP		22
-#define CdlTest 		25
-#define CdlID   		26
-#define CdlReadS		27
-#define CdlReset		28
+#define CdlGetlocL	16
+#define CdlGetlocP	17
+#define Cdl18     	18
+#define CdlGetTN	19
+#define CdlGetTD	20
+#define CdlSeekL	21
+#define CdlSeekP	22
+#define CdlTest 	25
+#define CdlID   	26
+#define CdlReadS	27
+#define CdlReset	28
 #define CdlReadToc      30
 
-#define AUTOPAUSE		249
-#define READ_ACK		250
-#define READ			251
-#define REPPLAY_ACK		252
-#define REPPLAY			253
-#define ASYNC			254
+#define AUTOPAUSE	249
+#define READ_ACK	250
+#define READ		251
+#define REPPLAY_ACK	252
+#define REPPLAY		253
+#define ASYNC		254
 /* don't set 255, it's reserved */
-
-cdrStruct cdr;
 
 char *CmdName[0x100]= {
 	"CdlSync",    "CdlNop",       "CdlSetloc",  "CdlPlay",
@@ -80,8 +81,8 @@ unsigned char Test23[] = { 0x43, 0x58, 0x44, 0x32, 0x39 ,0x34, 0x30, 0x51 };
 
 // 1x = 75 sectors per second
 // PSXCLK = 1 sec in the ps
-// so (PSXCLK / 75) >> BIAS = cdr read time (linuzappz)
-#define cdReadTime ((PSXCLK / 75) >> BIAS)
+// so (PSXCLK / 75) / BIAS = cdr read time (linuzappz)
+#define cdReadTime ((PSXCLK / 75) / BIAS)
 
 #define btoi(b)		((b)/16*10 + (b)%16)		/* BCD to u_char */
 #define itob(i)		((i)/10*16 + (i)%10)		/* u_char to BCD */
@@ -90,14 +91,14 @@ static struct CdrStat stat;
 static struct SubQ *subq;
 
 #define CDR_INT(eCycle) { \
+	psxRegs.interrupt|= 0x4; \
 	psxRegs.intCycle[2+1] = eCycle; \
-	psxRegs.intCycle[2] = psxCurrentCycle; \
-	psxIntAdd(0x4); }
+	psxRegs.intCycle[2] = psxRegs.cycle; }
 
 #define CDREAD_INT(eCycle) { \
+	psxRegs.interrupt|= 0x40000; \
 	psxRegs.intCycle[2+16+1] = eCycle; \
-	psxRegs.intCycle[2+16] = psxCurrentCycle; \
-	psxIntAdd(0x40000); }
+	psxRegs.intCycle[2+16] = psxRegs.cycle; }
 
 #define StartReading(type) { \
    	cdr.Reading = type; \
@@ -109,7 +110,7 @@ static struct SubQ *subq;
 #define StopReading() { \
 	if (cdr.Reading) { \
 		cdr.Reading = 0; \
-		psxIntRemove(0x40000); \
+		psxRegs.interrupt&=~0x40000; \
 	} \
 }
 
@@ -128,13 +129,12 @@ static struct SubQ *subq;
 }
 
 void ReadTrack() {
-
 	cdr.Prev[0] = itob(cdr.SetSector[0]);
 	cdr.Prev[1] = itob(cdr.SetSector[1]);
 	cdr.Prev[2] = itob(cdr.SetSector[2]);
 
 #ifdef CDR_LOG
-	CDR_LOG("KEY *** %x:%x:%x\n", cdr.Prev[0], cdr.Prev[1], cdr.Prev[2]);
+	CDR_LOG("ReadTrack() Log: KEY *** %x:%x:%x\n", cdr.Prev[0], cdr.Prev[1], cdr.Prev[2]);
 #endif
 	cdr.RErr = CDR_readTrack(cdr.Prev);
 }
@@ -551,11 +551,11 @@ void cdrInterrupt() {
 
 	if (cdr.Stat != NoIntr && cdr.Reg2 != 0x18) {
 		psxHu32ref(0x1070)|= SWAP32((u32)0x4);
-		psxExceptionTest();
+		psxRegs.interrupt|= 0x80000000;
 	}
 
 #ifdef CDR_LOG
-	CDR_LOG("Cdr Interrupt %x\n", Irq);
+	CDR_LOG("cdrInterrupt() Log: CDR Interrupt IRQ %x\n", Irq);
 #endif
 }
 
@@ -570,7 +570,7 @@ void cdrReadInterrupt() {
 	}
 
 #ifdef CDR_LOG
-	CDR_LOG("KEY END");
+	CDR_LOG("cdrReadInterrupt() Log: KEY END");
 #endif
 
     cdr.OCUP = 1;
@@ -584,7 +584,7 @@ void cdrReadInterrupt() {
 
 	if (cdr.RErr == -1) {
 #ifdef CDR_LOG
-		fprintf(emuLog, " err\n");
+		fprintf(emuLog, "cdrReadInterrupt() Log: err\n");
 #endif
 		memset(cdr.Transfer, 0, 2340);
 		cdr.Stat = DiskError;
@@ -598,7 +598,7 @@ void cdrReadInterrupt() {
     cdr.Stat = DataReady;
 
 #ifdef CDR_LOG
-	fprintf(emuLog, " %x:%x:%x\n", cdr.Transfer[0], cdr.Transfer[1], cdr.Transfer[2]);
+	fprintf(emuLog, "cdrReadInterrupt() Log: cdr.Transfer %x:%x:%x\n", cdr.Transfer[0], cdr.Transfer[1], cdr.Transfer[2]);
 #endif
 
 	if ((cdr.Muted == 1) && (cdr.Mode & 0x40) && (!Config.Xa) && (cdr.FirstSector != -1)) { // CD-XA
@@ -629,7 +629,7 @@ void cdrReadInterrupt() {
 
 	if ((cdr.Transfer[4+2] & 0x80) && (cdr.Mode & 0x2)) { // EOF
 #ifdef CDR_LOG
-		CDR_LOG("AutoPausing Read\n");
+		CDR_LOG("cdrReadInterrupt() Log: Autopausing read\n");
 #endif
 //		AddIrqQueue(AUTOPAUSE, 0x800);
 		AddIrqQueue(CdlPause, 0x800);
@@ -639,7 +639,7 @@ void cdrReadInterrupt() {
 		CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 	}
 	psxHu32ref(0x1070)|= SWAP32((u32)0x4);
-	psxExceptionTest();
+	psxRegs.interrupt|= 0x80000000;
 }
 
 /*
@@ -665,7 +665,7 @@ unsigned char cdrRead0(void) {
     cdr.Ctrl|=0x18;
 
 #ifdef CDR_LOG
-	CDR_LOG("CD0 Read: %x\n", cdr.Ctrl);
+	CDR_LOG("cdrRead0() Log: CD0 Read: %x\n", cdr.Ctrl);
 #endif
 	return psxHu8(0x1800) = cdr.Ctrl;
 }
@@ -677,7 +677,7 @@ cdrWrite0:
 
 void cdrWrite0(unsigned char rt) {
 #ifdef CDR_LOG
-	CDR_LOG("CD0 write: %x\n", rt);
+	CDR_LOG("cdrWrite0() Log: CD0 write: %x\n", rt);
 #endif
 	cdr.Ctrl = rt | (cdr.Ctrl & ~0x3);
 
@@ -694,7 +694,7 @@ unsigned char cdrRead1(void) {
 		if (cdr.ResultP == cdr.ResultC) cdr.ResultReady = 0;
 	} else psxHu8(0x1801) = 0;
 #ifdef CDR_LOG
-	CDR_LOG("CD1 Read: %x\n", psxHu8(0x1801));
+	CDR_LOG("cdrRead1() Log: CD1 Read: %x\n", psxHu8(0x1801));
 #endif
 	return psxHu8(0x1801);
 }
@@ -703,14 +703,14 @@ void cdrWrite1(unsigned char rt) {
 	int i;
 
 #ifdef CDR_LOG
-	CDR_LOG("CD1 write: %x (%s)\n", rt, CmdName[rt]);
+	CDR_LOG("cdrWrite1() Log: CD1 write: %x (%s)\n", rt, CmdName[rt]);
 #endif
 //	psxHu8(0x1801) = rt;
     cdr.Cmd = rt;
 	cdr.OCUP = 0;
 
 #ifdef CDRCMD_DEBUG
-	SysPrintf("CD1 write: %x (%s)", rt, CmdName[rt]);
+	SysPrintf("cdrWrite1() Log: CD1 write: %x (%s)", rt, CmdName[rt]);
 	if (cdr.ParamC) {
 		SysPrintf(" Param[%d] = {", cdr.ParamC);
 		for (i=0;i<cdr.ParamC;i++) SysPrintf(" %x,", cdr.Param[i]);
@@ -844,7 +844,7 @@ void cdrWrite1(unsigned char rt) {
 
     	case CdlSetmode:
 #ifdef CDR_LOG
-			CDR_LOG("Setmode %x\n", cdr.Param[0]);
+			CDR_LOG("cdrWrite1() Log: Setmode %x\n", cdr.Param[0]);
 #endif 
         	cdr.Mode = cdr.Param[0];
 			cdr.Ctrl|= 0x80;
@@ -924,13 +924,13 @@ void cdrWrite1(unsigned char rt) {
 
     	default:
 #ifdef CDR_LOG
-			CDR_LOG("Unknown Cmd: %x\n", cdr.Cmd);
+			CDR_LOG("cdrWrite1() Log: Unknown command: %x\n", cdr.Cmd);
 #endif
 			return;
     }
 	if (cdr.Stat != NoIntr) {
 		psxHu32ref(0x1070)|= SWAP32((u32)0x4);
-		psxExceptionTest();
+		psxRegs.interrupt|= 0x80000000;
 	}
 }
 
@@ -944,14 +944,14 @@ unsigned char cdrRead2(void) {
 	}
 
 #ifdef CDR_LOG
-	CDR_LOG("CD2 Read: %x\n", ret);
+	CDR_LOG("cdrRead2() Log: CD2 Read: %x\n", ret);
 #endif
 	return ret;
 }
 
 void cdrWrite2(unsigned char rt) {
 #ifdef CDR_LOG
-	CDR_LOG("CD2 write: %x\n", rt);
+	CDR_LOG("cdrWrite2() Log: CD2 write: %x\n", rt);
 #endif
     if (cdr.Ctrl & 0x1) {
 		switch (rt) {
@@ -978,14 +978,14 @@ unsigned char cdrRead3(void) {
 		else psxHu8(0x1803) = 0xff;
 	} else psxHu8(0x1803) = 0;
 #ifdef CDR_LOG
-	CDR_LOG("CD3 Read: %x\n", psxHu8(0x1803));
+	CDR_LOG("cdrRead3() Log: CD3 Read: %x\n", psxHu8(0x1803));
 #endif
 	return psxHu8(0x1803);
 }
 
 void cdrWrite3(unsigned char rt) {
 #ifdef CDR_LOG
-	CDR_LOG("CD3 write: %x\n", rt);
+	CDR_LOG("cdrWrite3() Log: CD3 write: %x\n", rt);
 #endif
     if (rt == 0x07 && cdr.Ctrl & 0x1) {
 		cdr.Stat = 0;
@@ -1014,7 +1014,7 @@ void psxDma3(u32 madr, u32 bcr, u32 chcr) {
 	u8 *ptr;
 
 #ifdef CDR_LOG
-	CDR_LOG("*** DMA 3 *** %lx addr = %lx size = %lx\n", chcr, madr, bcr);
+	CDR_LOG("psxDma3() Log: *** DMA 3 *** %lx addr = %lx size = %lx\n", chcr, madr, bcr);
 #endif
 
 	switch (chcr) {
@@ -1022,7 +1022,7 @@ void psxDma3(u32 madr, u32 bcr, u32 chcr) {
 		case 0x11400100:
 			if (cdr.Readed == 0) {
 #ifdef CDR_LOG
-				CDR_LOG("*** DMA 3 *** NOT READY\n");
+				CDR_LOG("psxDma3() Log: *** DMA 3 *** NOT READY\n");
 #endif
 				break;
 			}
@@ -1032,7 +1032,7 @@ void psxDma3(u32 madr, u32 bcr, u32 chcr) {
 			ptr = (u8*)PSXM(madr);
 			if (ptr == NULL) {
 #ifdef CPU_LOG
-				CDR_LOG("*** DMA 3 *** NULL Pointer!!!\n");
+				CDR_LOG("psxDma3() Log: *** DMA 3 *** NULL Pointer!\n");
 #endif
 				break;
 			}
@@ -1043,7 +1043,7 @@ void psxDma3(u32 madr, u32 bcr, u32 chcr) {
 			break;
 		default:
 #ifdef CDR_LOG
-			CDR_LOG("Unknown cddma %lx\n", chcr);
+			CDR_LOG("psxDma3() Log: Unknown cddma %lx\n", chcr);
 #endif
 			break;
 	}
@@ -1058,40 +1058,16 @@ void cdrReset() {
 	cdr.File=1; cdr.Channel=1;
 }
 
-static void cdrSwap()
-{
-	cdr.Reading = SWAP32p((void*)&cdr.Reading);
-	cdr.Play = SWAP32p((void*)&cdr.Play);
-	cdr.CurTrack = SWAP32p((void*)&cdr.CurTrack);
-	cdr.Mode = SWAP32p((void*)&cdr.Mode);
-	cdr.File = SWAP32p((void*)&cdr.File);
-	cdr.Channel = SWAP32p((void*)&cdr.Channel);
-	cdr.Muted = SWAP32p((void*)&cdr.Muted);
-	cdr.Reset = SWAP32p((void*)&cdr.Reset);
-	cdr.RErr = SWAP32p((void*)&cdr.RErr);
-	cdr.FirstSector = SWAP32p((void*)&cdr.FirstSector);
-
-	cdr.Xa.left.y0 = SWAP32p((void*)&cdr.Xa.left.y0);
-	cdr.Xa.left.y1 = SWAP32p((void*)&cdr.Xa.left.y1);
-	cdr.Xa.right.y0 = SWAP32p((void*)&cdr.Xa.right.y0);
-	cdr.Xa.right.y1 = SWAP32p((void*)&cdr.Xa.right.y1);
-
-	cdr.Init = SWAP32p((void*)&cdr.Init);
-	cdr.eCycle = SWAP32p((void*)&cdr.eCycle);
-	cdr.Seeked = SWAP32p((void*)&cdr.Seeked);
-}
-
 int cdrFreeze(gzFile f, int Mode) {
-	long tmp;
-	
-	cdrSwap();
-	gzfreeze(&cdr, sizeof(cdr));
-	cdrSwap();
+	uintptr_t tmp;
 
-	if (Mode == 1) tmp = SWAP32(cdr.pTransfer - cdr.Transfer);
+	gzfreeze(&cdr, sizeof(cdr));
+
+	if (Mode == 1) tmp = cdr.pTransfer - cdr.Transfer;
 	gzfreezel(&tmp);
-	if (Mode == 0) cdr.pTransfer = cdr.Transfer + (long)SWAP32p((void*)&tmp);
+	if (Mode == 0) cdr.pTransfer = cdr.Transfer + tmp;
 
 	return 0;
 }
+
 

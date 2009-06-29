@@ -47,20 +47,35 @@ u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
 int whichfb = 0;        /*** Frame buffer toggle ***/
 GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 #define DEFAULT_FIFO_SIZE ( 256 * 1024 )
-//static u8 gp_fifo[DEFAULT_FIFO_SIZE] ATTRIBUTE_ALIGN(32); /*** 3D GX FIFO ***/
+extern int controllerType;
 
+int stop = 0;
 
-void ScanPADSandReset() { PAD_ScanPads(); }
+void ScanPADSandReset() { 
+  PAD_ScanPads(); 
+  if(!((*(u32*)0xCC003000)>>16)) 
+    stop=1;  //exit will be called
+}
+
 static void Initialise (void){
-  whichfb = 0;        /*** Frame buffer toggle ***/
   VIDEO_Init();
   PAD_Init();
   PAD_Reset(0xf0000000);
+#ifdef HW_RVL
+  CONF_Init();
+#endif
 
-  
+  whichfb = 0;        /*** Frame buffer toggle ***/
   vmode = VIDEO_GetPreferredMode(NULL);
-    
+#ifdef HW_RVL    
+  if(VIDEO_HaveComponentCable() && CONF_GetProgressiveScan())
+    	vmode = &TVNtsc480Prog;
+#else
+  if(VIDEO_HaveComponentCable())
+	  vmode = &TVNtsc480Prog;
+#endif
   VIDEO_Configure (vmode);
+ 
   xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode)); //assume PAL largest
   xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));	//fixme for progressive?
   console_init (xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight,
@@ -93,7 +108,7 @@ static void Initialise (void){
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
 //  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
 
-  printf("Initialize - whichfb = %d; xfb = %x, %x\n",(u32)whichfb,(u32)xfb[0],(u32)xfb[1]);
+  printf("\n\nInitialize - whichfb = %d; xfb = %x, %x\n",(u32)whichfb,(u32)xfb[0],(u32)xfb[1]);
 
 }
 
@@ -120,28 +135,50 @@ void draw_splash(void)
 long LoadCdBios;
 
 int main(int argc, char *argv[]) {
-/*	char *file = NULL;
-	int runcd = 0;
-	int loadst = 0;
-	int i;
-*/
 
 	Initialise();
 	fatInitDefault();
     draw_splash();
 	
-	/* Configure pcsx */
+  /* Configure pcsx */
 	memset(&Config, 0, sizeof(PcsxConfig));
+#ifdef HW_RVL    
+  printf("\n\nWiiSX beta 1\n\n");
+#elif HW_DOL
+  printf("\n\nCubeSX beta 1\n\n");
+#endif
+  
+  u16 butns=0;
+  printf("Select Controller Type:\n(A) Standard : (B) Analog\n");
+  do{butns = PAD_ButtonsDown(0);}while(!((butns & PAD_BUTTON_A) || (butns & PAD_BUTTON_B)));
+  if(butns & PAD_BUTTON_A)  controllerType=0;
+  else  controllerType=1;
+  printf("%s selected\n",controllerType ? "Analog":"Standard");
+    
+  do{butns = PAD_ButtonsDown(0);}while(((butns & PAD_BUTTON_A) || (butns & PAD_BUTTON_B)));
+  
+  printf("Select Core Type:\n(X) Dynarec : (Y) Interpreter\n");
+  do{butns = PAD_ButtonsDown(0);}while(!((butns & PAD_BUTTON_X) || (butns & PAD_BUTTON_Y)));
+  if(butns & PAD_BUTTON_X)  Config.Cpu=0;
+  else  Config.Cpu=1;
+  printf("%s selected\n",Config.Cpu ? "Interpreter":"Dynarec");
+  
+  do{butns = PAD_ButtonsDown(0);}while(((butns & PAD_BUTTON_X) || (butns & PAD_BUTTON_Y)));
+  
+  printf("Press A\n");
+  while(!(PAD_ButtonsDown(0) & PAD_BUTTON_A));
+  while((PAD_ButtonsDown(0) & PAD_BUTTON_A));
+   
+
 	strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
 	strcpy(Config.BiosDir, "/PSXISOS/");
 	strcpy(Config.Net,"Disabled");
-
-	Config.Cpu = 1;	//interpreter = 1, dynarec = 0
-	Config.CpuBias = 2; //for 50/60fps
+	strcpy(Config.Mcd1,"/PSXISOS/Memcard1.mcd");
+  strcpy(Config.Mcd2,"/PSXISOS/Memcard2.mcd");
 	Config.PsxOut = 1;
 	Config.HLE = 1;
 	Config.Xa = 0;  //XA enabled
-	Config.Cdda = 0;
+	Config.Cdda = 1;
 	Config.PsxAuto = 1; //Autodetect
     SysPrintf("start main()\r\n");
 
@@ -151,18 +188,16 @@ int main(int argc, char *argv[]) {
 		while(1);
 	}
 	OpenPlugins();
-
-	/* Start gui */
-//	menu_start();
-
 	
 	SysReset();
 	
-    SysPrintf("CheckCdrom()\r\n");
+  SysPrintf("CheckCdrom\r\n");
 	CheckCdrom();
 	LoadCdrom();
 
-    SysPrintf("Execute()\r\n");
+	
+  SysPrintf("Execute\r\n");
+  Config.PsxOut = 0;
 	psxCpu->Execute();
 
 	return 0;
@@ -239,10 +274,7 @@ void SysCloseLibrary(void *lib) {
 
 int framesdone = 0;
 void SysUpdate() {
-	sprintf(txtbuffer,"Executed %i SysUpdates",framesdone);
-	DEBUG_print(txtbuffer,DBG_CORE1);
-	//printf("Executed %i frames\n",framesdone);
-	framesdone++;
+	//framesdone++;
 //	PADhandleKey(PAD1_keypressed());
 //	PADhandleKey(PAD2_keypressed());
 }

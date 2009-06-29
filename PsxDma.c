@@ -1,22 +1,28 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-#include "PsxCommon.h"
+/*
+* Handles PSX DMA functions.
+*/
+
+#include "psxdma.h"
 
 // Dma0/1 in Mdec.c
 // Dma3   in CdRom.c
@@ -63,7 +69,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 #endif
 	}
 
-	HW_DMA4_CHCR &= SWAPu32(~0x01000000);
+	HW_DMA4_CHCR &= SWAP32(~0x01000000);
 	DMA_INTERRUPT(4);
 }
 
@@ -84,7 +90,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 				break;
 			}
 			size = (bcr >> 16) * (bcr & 0xffff);
-			GPU_readDataMem((unsigned long *)ptr, size);
+			GPU_readDataMem((unsigned long*)ptr, size);
 			psxCpu->Clear(madr, size);
 			break;
 
@@ -100,8 +106,8 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 				break;
 			}
 			size = (bcr >> 16) * (bcr & 0xffff);
-			GPU_writeDataMem((unsigned long *)ptr, size);
-			GPUDMA_INT((size / 4) >> BIAS);
+			GPU_writeDataMem((unsigned long*)ptr, size);
+			GPUDMA_INT((size / 4) / BIAS);
 			return;
 //			break;
 
@@ -109,7 +115,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 #ifdef PSXDMA_LOG
 			PSXDMA_LOG("*** DMA 2 - GPU dma chain *** %lx addr = %lx size = %lx\n", chcr, madr, bcr);
 #endif
-			GPU_dmaChain((unsigned long *)psxM, madr & 0x1fffff);
+			GPU_dmaChain((u32 *)psxM, madr & 0x1fffff);
 			break;
 
 #ifdef PSXDMA_LOG
@@ -119,12 +125,12 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 #endif
 	}
 
-	HW_DMA2_CHCR &= SWAPu32(~0x01000000);
+	HW_DMA2_CHCR &= SWAP32(~0x01000000);
 	DMA_INTERRUPT(2);
 }
 
 void gpuInterrupt() {
-	HW_DMA2_CHCR &= SWAPu32(~0x01000000);
+	HW_DMA2_CHCR &= SWAP32(~0x01000000);
 	DMA_INTERRUPT(2);
 }
 
@@ -140,7 +146,7 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 #ifdef CPU_LOG
 			CPU_LOG("*** DMA6 OT *** NULL Pointer!!!\n");
 #endif
-			HW_DMA6_CHCR &= SWAPu32(~0x01000000);
+			HW_DMA6_CHCR &= SWAP32(~0x01000000);
 			DMA_INTERRUPT(6);
 			return;
 		}
@@ -149,7 +155,7 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 			*mem-- = SWAP32((madr - 4) & 0xffffff);
 			madr -= 4;
 		}
-		mem++; *mem = SWAP32(0xffffff);
+		mem++; *mem = 0xffffff;
 	}
 #ifdef PSXDMA_LOG
 	else {
@@ -158,7 +164,7 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 	}
 #endif
 
-	HW_DMA6_CHCR &= SWAPu32(~0x01000000);
+	HW_DMA6_CHCR &= SWAP32(~0x01000000);
 	DMA_INTERRUPT(6);
 }
 

@@ -1,72 +1,47 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
 #ifndef __PLUGINS_H__
 #define __PLUGINS_H__
 
-#include "Decode_XA.h"
-typedef struct {
-	unsigned long ulFreezeVersion;
-	unsigned long ulStatus;
-	unsigned long ulControl[256];
-	unsigned char psxVRam[1024*512*2];
-} GPUFreeze_t;
+#include "psxcommon.h"
+#include "spu.h"
 
-typedef struct
-{
- char          szSPUName[8];
- unsigned long ulFreezeVersion;
- unsigned long ulFreezeSize;
- unsigned char cSPUPort[0x200];
- unsigned char cSPURam[0x80000];
- xa_decode_t   xaS;     
-} SPUFreeze_t;
-
-
-#if defined (__WIN32__)
-#include "Win32\plugin.h"
-#elif defined(__LINUX__) || defined(__MACOSX__)
 typedef void* HWND;
 #define CALLBACK
-#include "Linux/Plugin.h"
-#elif defined(__DREAMCAST__)
-typedef void* HWND;
-#define CALLBACK
-#include "Dreamcast/Plugin.h"
-#endif
-#if defined(__GAMECUBE__)
-typedef void* HWND;
-#define CALLBACK
-#include "Gamecube/Plugin.h"
-#include "Gamecube/GamecubePlugins.h"
-#endif
-#ifndef EXT
-#define EXT extern
-#endif
+typedef long (* GPUopen)(unsigned long *, char *, char *);
+long GPU__open(void);          
+typedef long (* SPUopen)(void);
+long SPU__open(void);			
+typedef long (* PADopen)(unsigned long *);
+long PAD1__open(void);			
+long PAD2__open(void);
+typedef long (* NETopen)(unsigned long *);
 
-#include "PSEmu_Plugin_Defs.h"
-#include "Decode_XA.h"
+#include "psemu_plugin_defs.h"
+#include "decode_xa.h"
 
 int  LoadPlugins();
 void ReleasePlugins();
 int  OpenPlugins();
 void ClosePlugins();
-void ResetPlugins();
 
 
 typedef unsigned long (CALLBACK* PSEgetLibType)(void);
@@ -77,13 +52,13 @@ typedef char *(CALLBACK* PSEgetLibName)(void);
 typedef long (CALLBACK* GPUinit)(void);
 typedef long (CALLBACK* GPUshutdown)(void);
 typedef long (CALLBACK* GPUclose)(void);
-typedef void (CALLBACK* GPUwriteStatus)(unsigned long);
-typedef void (CALLBACK* GPUwriteData)(unsigned long);
+typedef void (CALLBACK* GPUwriteStatus)(uint32_t);
+typedef void (CALLBACK* GPUwriteData)(uint32_t);
 typedef void (CALLBACK* GPUwriteDataMem)(unsigned long *, int);
-typedef unsigned long (CALLBACK* GPUreadStatus)(void);
-typedef unsigned long (CALLBACK* GPUreadData)(void);
+typedef uint32_t (CALLBACK* GPUreadStatus)(void);
+typedef uint32_t (CALLBACK* GPUreadData)(void);
 typedef void (CALLBACK* GPUreadDataMem)(unsigned long *, int);
-typedef long (CALLBACK* GPUdmaChain)(unsigned long *,unsigned long);
+typedef long (CALLBACK* GPUdmaChain)(uint32_t *,uint32_t);
 typedef void (CALLBACK* GPUupdateLace)(void);
 typedef long (CALLBACK* GPUconfigure)(void);
 typedef long (CALLBACK* GPUtest)(void);
@@ -91,7 +66,13 @@ typedef void (CALLBACK* GPUabout)(void);
 typedef void (CALLBACK* GPUmakeSnapshot)(void);
 typedef void (CALLBACK* GPUkeypressed)(int);
 typedef void (CALLBACK* GPUdisplayText)(char *);
-typedef long (CALLBACK* GPUfreeze)(unsigned long, GPUFreeze_t *);
+typedef struct {
+	uint32_t ulFreezeVersion;
+	uint32_t ulStatus;
+	uint32_t ulControl[256];
+	unsigned char psxVRam[1024*512*2];
+} GPUFreeze_t;
+typedef long (CALLBACK* GPUfreeze)(uint32_t, GPUFreeze_t *);
 typedef long (CALLBACK* GPUgetScreenPic)(unsigned char *);
 typedef long (CALLBACK* GPUshowScreenPic)(unsigned char *);
 typedef void (CALLBACK* GPUclearDynarec)(void (CALLBACK *callback)(void));
@@ -99,28 +80,28 @@ typedef void (CALLBACK* GPUclearDynarec)(void (CALLBACK *callback)(void));
 //plugin stuff From Shadow
 // *** walking in the valley of your darking soul i realize that i was alone
 //Gpu function pointers
-EXT GPUupdateLace    GPU_updateLace;
-EXT GPUinit          GPU_init;
-EXT GPUshutdown      GPU_shutdown; 
-EXT GPUconfigure     GPU_configure;
-EXT GPUtest          GPU_test;
-EXT GPUabout         GPU_about;
-EXT GPUopen          GPU_open;
-EXT GPUclose         GPU_close;
-EXT GPUreadStatus    GPU_readStatus;
-EXT GPUreadData      GPU_readData;
-EXT GPUreadDataMem   GPU_readDataMem;
-EXT GPUwriteStatus   GPU_writeStatus; 
-EXT GPUwriteData     GPU_writeData;
-EXT GPUwriteDataMem  GPU_writeDataMem;
-EXT GPUdmaChain      GPU_dmaChain;
-EXT GPUkeypressed    GPU_keypressed;
-EXT GPUdisplayText   GPU_displayText;
-EXT GPUmakeSnapshot  GPU_makeSnapshot;
-EXT GPUfreeze        GPU_freeze;
-EXT GPUgetScreenPic  GPU_getScreenPic;
-EXT GPUshowScreenPic GPU_showScreenPic;
-EXT GPUclearDynarec  GPU_clearDynarec;
+GPUupdateLace    GPU_updateLace;
+GPUinit          GPU_init;
+GPUshutdown      GPU_shutdown; 
+GPUconfigure     GPU_configure;
+GPUtest          GPU_test;
+GPUabout         GPU_about;
+GPUopen          GPU_open;
+GPUclose         GPU_close;
+GPUreadStatus    GPU_readStatus;
+GPUreadData      GPU_readData;
+GPUreadDataMem   GPU_readDataMem;
+GPUwriteStatus   GPU_writeStatus; 
+GPUwriteData     GPU_writeData;
+GPUwriteDataMem  GPU_writeDataMem;
+GPUdmaChain      GPU_dmaChain;
+GPUkeypressed    GPU_keypressed;
+GPUdisplayText   GPU_displayText;
+GPUmakeSnapshot  GPU_makeSnapshot;
+GPUfreeze        GPU_freeze;
+GPUgetScreenPic  GPU_getScreenPic;
+GPUshowScreenPic GPU_showScreenPic;
+GPUclearDynarec  GPU_clearDynarec;
 
 //cd rom plugin ;)
 typedef long (CALLBACK* CDRinit)(void);
@@ -136,9 +117,10 @@ typedef long (CALLBACK* CDRtest)(void);
 typedef void (CALLBACK* CDRabout)(void);
 typedef long (CALLBACK* CDRplay)(unsigned char *);
 typedef long (CALLBACK* CDRstop)(void);
+typedef long (CALLBACK* CDRsetfilename)(char *);
 struct CdrStat {
-	unsigned long Type;
-	unsigned long Status;
+	uint32_t Type;
+	uint32_t Status;
 	unsigned char Time[3];
 };
 typedef long (CALLBACK* CDRgetStatus)(struct CdrStat *);
@@ -156,28 +138,39 @@ struct SubQ {
 typedef unsigned char* (CALLBACK* CDRgetBufferSub)(void);
 
 //cd rom function pointers 
-EXT CDRinit               CDR_init;
-EXT CDRshutdown           CDR_shutdown;
-EXT CDRopen               CDR_open;
-EXT CDRclose              CDR_close; 
-EXT CDRtest               CDR_test;
-EXT CDRgetTN              CDR_getTN;
-EXT CDRgetTD              CDR_getTD;
-EXT CDRreadTrack          CDR_readTrack;
-EXT CDRgetBuffer          CDR_getBuffer;
-EXT CDRplay               CDR_play;
-EXT CDRstop               CDR_stop;
-EXT CDRgetStatus          CDR_getStatus;
-EXT CDRgetDriveLetter     CDR_getDriveLetter;
-EXT CDRgetBufferSub       CDR_getBufferSub;
-EXT CDRconfigure          CDR_configure;
-EXT CDRabout              CDR_about;
+CDRinit               CDR_init;
+CDRshutdown           CDR_shutdown;
+CDRopen               CDR_open;
+CDRclose              CDR_close; 
+CDRtest               CDR_test;
+CDRgetTN              CDR_getTN;
+CDRgetTD              CDR_getTD;
+CDRreadTrack          CDR_readTrack;
+CDRgetBuffer          CDR_getBuffer;
+CDRplay               CDR_play;
+CDRstop               CDR_stop;
+CDRgetStatus          CDR_getStatus;
+CDRgetDriveLetter     CDR_getDriveLetter;
+CDRgetBufferSub       CDR_getBufferSub;
+CDRconfigure          CDR_configure;
+CDRabout              CDR_about;
+CDRsetfilename        CDR_setfilename;
 
 // spu plugin
 typedef long (CALLBACK* SPUinit)(void);				
 typedef long (CALLBACK* SPUshutdown)(void);	
 typedef long (CALLBACK* SPUclose)(void);			
 typedef void (CALLBACK* SPUplaySample)(unsigned char);		
+typedef void (CALLBACK* SPUstartChannels1)(unsigned short);	
+typedef void (CALLBACK* SPUstartChannels2)(unsigned short);
+typedef void (CALLBACK* SPUstopChannels1)(unsigned short);	
+typedef void (CALLBACK* SPUstopChannels2)(unsigned short);	
+typedef void (CALLBACK* SPUputOne)(uint32_t,unsigned short);			
+typedef unsigned short (CALLBACK* SPUgetOne)(uint32_t);			
+typedef void (CALLBACK* SPUsetAddr)(unsigned char, unsigned short);			
+typedef void (CALLBACK* SPUsetPitch)(unsigned char, unsigned short);		
+typedef void (CALLBACK* SPUsetVolumeL)(unsigned char, short );		
+typedef void (CALLBACK* SPUsetVolumeR)(unsigned char, short );		
 //psemu pro 2 functions from now..
 typedef void (CALLBACK* SPUwriteRegister)(unsigned long, unsigned short);	
 typedef unsigned short (CALLBACK* SPUreadRegister)(unsigned long);		
@@ -190,29 +183,47 @@ typedef void (CALLBACK* SPUregisterCallback)(void (CALLBACK *callback)(void));
 typedef long (CALLBACK* SPUconfigure)(void);
 typedef long (CALLBACK* SPUtest)(void);			
 typedef void (CALLBACK* SPUabout)(void);
-
-typedef long (CALLBACK* SPUfreeze)(unsigned long, SPUFreeze_t *);
-typedef void (CALLBACK* SPUasync)(unsigned long);
+typedef struct {
+	unsigned char PluginName[8];
+	uint32_t PluginVersion;
+	uint32_t Size;
+	unsigned char SPUPorts[0x200];
+	unsigned char SPURam[0x80000];
+	xa_decode_t xa;
+	unsigned char *SPUInfo;
+} SPUFreeze_t;
+typedef long (CALLBACK* SPUfreeze)(uint32_t, SPUFreeze_t *);
+typedef void (CALLBACK* SPUasync)(uint32_t);
 
 //SPU POINTERS
-EXT SPUconfigure        SPU_configure;
-EXT SPUabout            SPU_about;
-EXT SPUinit             SPU_init;
-EXT SPUshutdown         SPU_shutdown;
-EXT SPUtest             SPU_test;
-EXT SPUopen             SPU_open;
-EXT SPUclose            SPU_close;
-EXT SPUplaySample       SPU_playSample;
-EXT SPUwriteRegister    SPU_writeRegister;
-EXT SPUreadRegister     SPU_readRegister;
-EXT SPUwriteDMA         SPU_writeDMA;
-EXT SPUreadDMA          SPU_readDMA;
-EXT SPUwriteDMAMem      SPU_writeDMAMem;
-EXT SPUreadDMAMem       SPU_readDMAMem;
-EXT SPUplayADPCMchannel SPU_playADPCMchannel;
-EXT SPUfreeze           SPU_freeze;
-EXT SPUregisterCallback SPU_registerCallback;
-EXT SPUasync            SPU_async;
+SPUconfigure        SPU_configure;
+SPUabout            SPU_about;
+SPUinit             SPU_init;
+SPUshutdown         SPU_shutdown;
+SPUtest             SPU_test;
+SPUopen             SPU_open;
+SPUclose            SPU_close;
+SPUplaySample       SPU_playSample;
+SPUstartChannels1   SPU_startChannels1;
+SPUstartChannels2   SPU_startChannels2;
+SPUstopChannels1    SPU_stopChannels1;
+SPUstopChannels2    SPU_stopChannels2;
+SPUputOne           SPU_putOne;
+SPUgetOne           SPU_getOne;
+SPUsetAddr          SPU_setAddr;
+SPUsetPitch         SPU_setPitch;
+SPUsetVolumeL       SPU_setVolumeL;
+SPUsetVolumeR       SPU_setVolumeR;
+SPUwriteRegister    SPU_writeRegister;
+SPUreadRegister     SPU_readRegister;
+SPUwriteDMA         SPU_writeDMA;
+SPUreadDMA          SPU_readDMA;
+SPUwriteDMAMem      SPU_writeDMAMem;
+SPUreadDMAMem       SPU_readDMAMem;
+SPUplayADPCMchannel SPU_playADPCMchannel;
+SPUfreeze           SPU_freeze;
+SPUregisterCallback SPU_registerCallback;
+SPUasync            SPU_async;
 
 // PAD Functions
 
@@ -231,33 +242,33 @@ typedef unsigned char (CALLBACK* PADpoll)(unsigned char);
 typedef void (CALLBACK* PADsetSensitive)(int);
 
 //PAD POINTERS
-EXT PADconfigure        PAD1_configure;
-EXT PADabout            PAD1_about;
-EXT PADinit             PAD1_init;
-EXT PADshutdown         PAD1_shutdown;
-EXT PADtest             PAD1_test;
-EXT PADopen             PAD1_open;
-EXT PADclose            PAD1_close;
-EXT PADquery			PAD1_query;
-EXT PADreadPort1		PAD1_readPort1;
-EXT PADkeypressed		PAD1_keypressed;
-EXT PADstartPoll        PAD1_startPoll;
-EXT PADpoll             PAD1_poll;
-EXT PADsetSensitive     PAD1_setSensitive;
+PADconfigure        PAD1_configure;
+PADabout            PAD1_about;
+PADinit             PAD1_init;
+PADshutdown         PAD1_shutdown;
+PADtest             PAD1_test;
+PADopen             PAD1_open;
+PADclose            PAD1_close;
+PADquery			PAD1_query;
+PADreadPort1		PAD1_readPort1;
+PADkeypressed		PAD1_keypressed;
+PADstartPoll        PAD1_startPoll;
+PADpoll             PAD1_poll;
+PADsetSensitive     PAD1_setSensitive;
 
-EXT PADconfigure        PAD2_configure;
-EXT PADabout            PAD2_about;
-EXT PADinit             PAD2_init;
-EXT PADshutdown         PAD2_shutdown;
-EXT PADtest             PAD2_test;
-EXT PADopen             PAD2_open;
-EXT PADclose            PAD2_close;
-EXT PADquery            PAD2_query;
-EXT PADreadPort2		PAD2_readPort2;
-EXT PADkeypressed		PAD2_keypressed;
-EXT PADstartPoll        PAD2_startPoll;
-EXT PADpoll             PAD2_poll;
-EXT PADsetSensitive     PAD2_setSensitive;
+PADconfigure        PAD2_configure;
+PADabout            PAD2_about;
+PADinit             PAD2_init;
+PADshutdown         PAD2_shutdown;
+PADtest             PAD2_test;
+PADopen             PAD2_open;
+PADclose            PAD2_close;
+PADquery            PAD2_query;
+PADreadPort2		PAD2_readPort2;
+PADkeypressed		PAD2_keypressed;
+PADstartPoll        PAD2_startPoll;
+PADpoll             PAD2_poll;
+PADsetSensitive     PAD2_setSensitive;
 
 // NET plugin
 
@@ -298,22 +309,22 @@ typedef long (CALLBACK* NETkeypressed)(int)
 
 
 // NET function pointers 
-EXT NETinit               NET_init;
-EXT NETshutdown           NET_shutdown;
-EXT NETopen               NET_open;
-EXT NETclose              NET_close; 
-EXT NETtest               NET_test;
-EXT NETconfigure          NET_configure;
-EXT NETabout              NET_about;
-EXT NETpause              NET_pause;
-EXT NETresume             NET_resume;
-EXT NETqueryPlayer        NET_queryPlayer;
-EXT NETsendData           NET_sendData;
-EXT NETrecvData           NET_recvData;
-EXT NETsendPadData        NET_sendPadData;
-EXT NETrecvPadData        NET_recvPadData;
-EXT NETsetInfo            NET_setInfo;
-EXT NETkeypressed         NET_keypressed;
+NETinit               NET_init;
+NETshutdown           NET_shutdown;
+NETopen               NET_open;
+NETclose              NET_close; 
+NETtest               NET_test;
+NETconfigure          NET_configure;
+NETabout              NET_about;
+NETpause              NET_pause;
+NETresume             NET_resume;
+NETqueryPlayer        NET_queryPlayer;
+NETsendData           NET_sendData;
+NETrecvData           NET_recvData;
+NETsendPadData        NET_sendPadData;
+NETrecvPadData        NET_recvPadData;
+NETsetInfo            NET_setInfo;
+NETkeypressed         NET_keypressed;
 
 int LoadCDRplugin(char *CDRdll);
 int LoadGPUplugin(char *GPUdll);

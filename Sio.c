@@ -1,38 +1,29 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#if defined(__DREAMCAST__)
-#define st_size size
-//struct stat {
-//	uint32 st_size;
-//};
-#else
+/*
+* SIO functions.
+*/
+
+#include "sio.h"
 #include <sys/stat.h>
-#endif
-
-#include "PsxCommon.h"
-
-#ifdef _MSC_VER_
-#pragma warning(disable:4244)
-#endif
 
 // *** FOR WORKS ON PADS AND MEMORY CARDS *****
 
@@ -46,23 +37,29 @@ unsigned short ModeReg;
 unsigned short CtrlReg;
 unsigned short BaudReg;
 
-static unsigned long bufcount;
-static unsigned long parp;
-static unsigned long mcdst,rdwr;
+static unsigned int bufcount;
+static unsigned int parp;
+static unsigned int mcdst,rdwr;
 static unsigned char adrH,adrL;
-static unsigned long padst;
+static unsigned int padst;
 
 PadDataS pad;
 
+#ifdef HW_RVL
+#include "Gamecube/MEM2.h"
+char *Mcd1Data = (char*)MCD1_LO;
+char *Mcd2Data = (char*)MCD2_LO;
+#else
 char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
+#endif
 
 // clk cycle byte
-// 4us * 8bits = ((PSXCLK / 1000000) * 32) >> BIAS; (linuzappz)
+// 4us * 8bits = ((PSXCLK / 1000000) * 32) / BIAS; (linuzappz)
 #define SIO_INT() { \
 	if (!Config.Sio) { \
+		psxRegs.interrupt|= 0x80; \
 		psxRegs.intCycle[7+1] = 200; /*270;*/ \
-		psxRegs.intCycle[7] = psxCurrentCycle; \
-		psxIntAdd(0x80); \
+		psxRegs.intCycle[7] = psxRegs.cycle; \
 	} \
 }
 
@@ -105,7 +102,7 @@ unsigned char sioRead8() {
 
 void netError() {
 	ClosePlugins();
-	SysMessage(_("Connection closed\n"));
+	SysMessage(_("Connection closed!\n"));
 	SysRunGui();
 }
 
@@ -305,7 +302,7 @@ void sioWriteCtrl16(unsigned short value) {
 	if ((CtrlReg & SIO_RESET) || (!CtrlReg)) {
 		padst = 0; mcdst = 0; parp = 0;
 		StatReg = TX_RDY | TX_EMPTY;
-		psxIntRemove(0x80);
+		psxRegs.interrupt&=~0x80;
 	}
 }
 
@@ -316,7 +313,7 @@ void sioInterrupt() {
 //	SysPrintf("Sio Interrupt\n");
 	StatReg|= IRQ;
 	psxHu32ref(0x1070)|= SWAPu32(0x80);
-	psxExceptionTest();
+	psxRegs.interrupt|= 0x80000000;
 }
 
 void LoadMcd(int mcd, char *str) {
@@ -326,9 +323,13 @@ void LoadMcd(int mcd, char *str) {
 	if (mcd == 1) data = Mcd1Data;
 	if (mcd == 2) data = Mcd2Data;
 
-	if (*str == 0) sprintf(str, "Mcd00%d.mcr", mcd);
+	if (*str == 0) {
+		sprintf(str, "memcards/card%d.mcd", mcd);
+		printf ("No memory card value was specified - creating a default card %s\n", str);
+	}
 	f = fopen(str, "rb");
 	if (f == NULL) {
+		printf ("The memory card %s doesn't exist - creating it\n", str);
 		CreateMcd(str);
 		f = fopen(str, "rb");
 		if (f != NULL) {
@@ -343,11 +344,11 @@ void LoadMcd(int mcd, char *str) {
 			fread(data, 1, MCD_SIZE, f);
 			fclose(f);
 		}
-		else SysMessage(_("Failed loading MemCard %s\n"), str);
+		else SysMessage(_("Memory card %s failed to load!\n"), str);
 	}
 	else {
 		struct stat buf;
-
+		printf ("Loading memory card %s\n", str);
 		if (stat(str, &buf) != -1) {
 			if (buf.st_size == MCD_SIZE + 64) 
 				fseek(f, 64, SEEK_SET);
@@ -364,7 +365,7 @@ void LoadMcds(char *mcd1, char *mcd2) {
 	LoadMcd(2, mcd2);
 }
 
-void SaveMcd(char *mcd, char *data, unsigned long adr, int size) {
+void SaveMcd(char *mcd, char *data, uint32_t adr, int size) {
 	FILE *f;
 	
 	f = fopen(mcd, "r+b");
@@ -536,17 +537,17 @@ void ConvertMcd(char *mcd, char *data) {
 }
 
 void GetMcdBlockInfo(int mcd, int block, McdBlock *Info) {
-	unsigned char *data = NULL, *ptr, *str;
+	char *data = NULL, *ptr, *str;
 	unsigned short clut[16];
 	unsigned short c;
 	int i, x;
 
 	memset(Info, 0, sizeof(McdBlock));
 
-	str = (unsigned char*) Info->Title;
+	str = Info->Title;
 
-	if (mcd == 1) data = (unsigned char*) Mcd1Data;
-	if (mcd == 2) data = (unsigned char*) Mcd2Data;
+	if (mcd == 1) data = Mcd1Data;
+	if (mcd == 2) data = Mcd2Data;
 
 	ptr = data + block * 8192 + 2;
 
@@ -607,10 +608,10 @@ void GetMcdBlockInfo(int mcd, int block, McdBlock *Info) {
 	Info->Flags = *ptr;
 
 	ptr+= 0xa;
-	strncpy(Info->ID, (char*)ptr, 12);
+	strncpy(Info->ID, ptr, 12);
 	Info->ID[12] = 0;
 	ptr+= 12;
-	strcpy(Info->Name, (char*)ptr);
+	strncpy(Info->Name, ptr, 16);
 }
 
 int sioFreeze(gzFile f, int Mode) {

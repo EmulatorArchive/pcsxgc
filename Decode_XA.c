@@ -1,26 +1,33 @@
-//============================================
-//=== Audio XA decoding
-//=== Kazzuya
-//============================================
-//=== Modified by linuzappz / yokota
-//============================================
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-#include <stdio.h>
+/* 
+* XA audio decoding functions (Kazzuya).
+*/
 
-#include "PsxCommon.h"
-#include "Decode_XA.h"
-//#define FIXED
+#include "decode_xa.h"
 
-#ifdef _MSC_VER_
-#pragma warning(disable:4244)
-#endif
-
-typedef unsigned char U8;
-typedef unsigned short U16;
-typedef unsigned long U32;
+#define _FIXED
 
 #define NOT(_X_)				(!(_X_))
-#define CLAMP(_X_,_MI_,_MA_)	{if(_X_<_MI_)_X_=_MI_;if(_X_>_MA_)_X_=_MA_;}
+#define XACLAMP(_X_,_MI_,_MA_)	{if(_X_<_MI_)_X_=_MI_;if(_X_>_MA_)_X_=_MA_;}
 
 #define SH	4
 #define SHC	10
@@ -29,7 +36,7 @@ typedef unsigned long U32;
 //===  ADPCM DECODING ROUTINES
 //============================================
 
-#ifndef FIXED
+#ifndef _FIXED
 static double K0[4] = {
     0.0,
     0.9375,
@@ -68,7 +75,7 @@ void ADPCM_InitDecode(ADPCM_Decode_t *decp) {
 }
 
 //===========================================
-#ifndef FIXED
+#ifndef _FIXED
 #define IK0(fid)	((int)((-K0[fid]) * (1<<SHC)))
 #define IK1(fid)	((int)((-K1[fid]) * (1<<SHC)))
 #else
@@ -76,11 +83,11 @@ void ADPCM_InitDecode(ADPCM_Decode_t *decp) {
 #define IK1(fid)	(-K1[fid])
 #endif
 
-static __inline void ADPCM_DecodeBlock16( ADPCM_Decode_t *decp, U8 filter_range, const void *vblockp, short *destp, int inc ) {
+static __inline void ADPCM_DecodeBlock16( ADPCM_Decode_t *decp, u8 filter_range, const void *vblockp, short *destp, int inc ) {
 	int i;
 	int range, filterid;
-	long fy0, fy1;
-	const U16 *blockp;
+	s32 fy0, fy1;
+	const u16 *blockp;
 
 	blockp = (const unsigned short *)vblockp;
 	filterid = (filter_range >>  4) & 0x0f;
@@ -90,10 +97,10 @@ static __inline void ADPCM_DecodeBlock16( ADPCM_Decode_t *decp, U8 filter_range,
 	fy1 = decp->y1;
 
 	for (i = BLKSIZ/4; i; --i) {
-		long y;
-		long x0, x1, x2, x3;
+		s32 y;
+		s32 x0, x1, x2, x3;
 
-		y = *blockp; blockp++;
+		y = *blockp++;
 		x3 = (short)( y        & 0xf000) >> range; x3 <<= SH;
 		x2 = (short)((y <<  4) & 0xf000) >> range; x2 <<= SH;
 		x1 = (short)((y <<  8) & 0xf000) >> range; x1 <<= SH;
@@ -104,17 +111,10 @@ static __inline void ADPCM_DecodeBlock16( ADPCM_Decode_t *decp, U8 filter_range,
 		x2 -= (IK0(filterid) * fy0 + (IK1(filterid) * fy1)) >> SHC; fy1 = fy0; fy0 = x2;
 		x3 -= (IK0(filterid) * fy0 + (IK1(filterid) * fy1)) >> SHC; fy1 = fy0; fy0 = x3;
 
-#if 1
-		CLAMP( x0, -32768<<SH, 32767<<SH ); *destp = x0 >> SH; destp += inc;
-		CLAMP( x1, -32768<<SH, 32767<<SH ); *destp = x1 >> SH; destp += inc;
-		CLAMP( x2, -32768<<SH, 32767<<SH ); *destp = x2 >> SH; destp += inc;
-		CLAMP( x3, -32768<<SH, 32767<<SH ); *destp = x3 >> SH; destp += inc;
-#else
-		*destp = 0; destp += inc;
-		*destp = 10000; destp += inc;
-		*destp = 0; destp += inc;
-		*destp = -10000; destp += inc;
-#endif
+		XACLAMP( x0, -32768<<SH, 32767<<SH ); *destp = x0 >> SH; destp += inc;
+		XACLAMP( x1, -32768<<SH, 32767<<SH ); *destp = x1 >> SH; destp += inc;
+		XACLAMP( x2, -32768<<SH, 32767<<SH ); *destp = x2 >> SH; destp += inc;
+		XACLAMP( x3, -32768<<SH, 32767<<SH ); *destp = x3 >> SH; destp += inc;
 	}
 	decp->y0 = fy0;
 	decp->y1 = fy1;
@@ -124,10 +124,10 @@ static int headtable[4] = {0,2,8,10};
 
 //===========================================
 static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
-	const U8    *sound_groupsp;
-	const U8    *sound_datap, *sound_datap2;
+	const u8    *sound_groupsp;
+	const u8    *sound_datap, *sound_datap2;
 	int         i, j, k, nbits;
-	U16			data[4096], *datap;
+	u16			data[4096], *datap;
 	short		*destp;
 
 	destp = xdp->pcm;
@@ -144,8 +144,8 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
     				sound_datap2 = sound_datap + i;
 
 					for (k=0; k < 14; k++, sound_datap2 += 8) {
-        	   				*(datap++) = (U16)sound_datap2[0] |
-        	               			     (U16)(sound_datap2[4] << 8);
+        	   				*(datap++) = (u16)sound_datap2[0] |
+        	               			     (u16)(sound_datap2[4] << 8);
 					}
 
     				ADPCM_DecodeBlock16( &xdp->left,  sound_groupsp[headtable[i]+0], data,
@@ -154,8 +154,8 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
         			datap = data;
         			sound_datap2 = sound_datap + i;
         			for (k=0; k < 14; k++, sound_datap2 += 8) {
-           					*(datap++) = (U16)sound_datap2[0] |
-            	          			     (U16)(sound_datap2[4] << 8);
+           					*(datap++) = (u16)sound_datap2[0] |
+            	          			     (u16)(sound_datap2[4] << 8);
 					}
 					ADPCM_DecodeBlock16( &xdp->right,  sound_groupsp[headtable[i]+1], data,
                            			    destp+1, 2 );
@@ -173,10 +173,10 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
 	    			sound_datap2 = sound_datap + i;
 
         			for (k=0; k < 7; k++, sound_datap2 += 16) {
-           					*(datap++) = (U16)(sound_datap2[ 0] & 0x0f) |
-                       				    ((U16)(sound_datap2[ 4] & 0x0f) <<  4) |
-                       				    ((U16)(sound_datap2[ 8] & 0x0f) <<  8) |
-                       				    ((U16)(sound_datap2[12] & 0x0f) << 12);
+           					*(datap++) = (u16)(sound_datap2[ 0] & 0x0f) |
+                       				    ((u16)(sound_datap2[ 4] & 0x0f) <<  4) |
+                       				    ((u16)(sound_datap2[ 8] & 0x0f) <<  8) |
+                       				    ((u16)(sound_datap2[12] & 0x0f) << 12);
 					}
 	    			ADPCM_DecodeBlock16( &xdp->left,  sound_groupsp[headtable[i]+0], data,
                    				    destp+0, 2 );
@@ -184,10 +184,10 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
 	        		datap = data;
 	        		sound_datap2 = sound_datap + i;
         			for (k=0; k < 7; k++, sound_datap2 += 16) {
-           					*(datap++) = (U16)(sound_datap2[ 0] >> 4) |
-                       	    			((U16)(sound_datap2[ 4] >> 4) <<  4) |
-                       				    ((U16)(sound_datap2[ 8] >> 4) <<  8) |
-                       				    ((U16)(sound_datap2[12] >> 4) << 12);
+           					*(datap++) = (u16)(sound_datap2[ 0] >> 4) |
+                       	    			((u16)(sound_datap2[ 4] >> 4) <<  4) |
+                       				    ((u16)(sound_datap2[ 8] >> 4) <<  8) |
+                       				    ((u16)(sound_datap2[12] >> 4) << 12);
 					}
 					ADPCM_DecodeBlock16( &xdp->right,  sound_groupsp[headtable[i]+1], data,
                            			    destp+1, 2 );
@@ -206,8 +206,8 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
         			datap = data;
         			sound_datap2 = sound_datap + i;
         			for (k=0; k < 14; k++, sound_datap2 += 8) {
-           					*(datap++) = (U16)sound_datap2[0] |
-                       				     (U16)(sound_datap2[4] << 8);
+           					*(datap++) = (u16)sound_datap2[0] |
+                       				     (u16)(sound_datap2[4] << 8);
 					}
 	        		ADPCM_DecodeBlock16( &xdp->left,  sound_groupsp[headtable[i]+0], data,
                            			    destp, 1 );
@@ -217,8 +217,8 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
 	        		datap = data;
 	        		sound_datap2 = sound_datap + i;
         			for (k=0; k < 14; k++, sound_datap2 += 8) {
-           					*(datap++) = (U16)sound_datap2[0] |
-                       				     (U16)(sound_datap2[4] << 8);
+           					*(datap++) = (u16)sound_datap2[0] |
+                       				     (u16)(sound_datap2[4] << 8);
 					}
 	       			ADPCM_DecodeBlock16( &xdp->left,  sound_groupsp[headtable[i]+1], data,
                            			    destp, 1 );
@@ -235,10 +235,10 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
 	        		datap = data;
 	        		sound_datap2 = sound_datap + i;
         			for (k=0; k < 7; k++, sound_datap2 += 16) {
-           					*(datap++) = (U16)(sound_datap2[ 0] & 0x0f) |
-                       				    ((U16)(sound_datap2[ 4] & 0x0f) <<  4) |
-                       				    ((U16)(sound_datap2[ 8] & 0x0f) <<  8) |
-                       				    ((U16)(sound_datap2[12] & 0x0f) << 12);
+           					*(datap++) = (u16)(sound_datap2[ 0] & 0x0f) |
+                       				    ((u16)(sound_datap2[ 4] & 0x0f) <<  4) |
+                       				    ((u16)(sound_datap2[ 8] & 0x0f) <<  8) |
+                       				    ((u16)(sound_datap2[12] & 0x0f) << 12);
 					}
 	        		ADPCM_DecodeBlock16( &xdp->left,  sound_groupsp[headtable[i]+0], data,
                            			    destp, 1 );
@@ -248,10 +248,10 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
 	        		datap = data;
 	        		sound_datap2 = sound_datap + i;
         			for (k=0; k < 7; k++, sound_datap2 += 16) {
-            				*(datap++) = (U16)(sound_datap2[ 0] >> 4) |
-                       	    		    ((U16)(sound_datap2[ 4] >> 4) <<  4) |
-                        				((U16)(sound_datap2[ 8] >> 4) <<  8) |
-                        				((U16)(sound_datap2[12] >> 4) << 12);
+            				*(datap++) = (u16)(sound_datap2[ 0] >> 4) |
+                       	    		    ((u16)(sound_datap2[ 4] >> 4) <<  4) |
+                        				((u16)(sound_datap2[ 8] >> 4) <<  8) |
+                        				((u16)(sound_datap2[12] >> 4) << 12);
         			}
 	       			ADPCM_DecodeBlock16( &xdp->left,  sound_groupsp[headtable[i]+1], data,
                            			    destp, 1 );
@@ -267,15 +267,15 @@ static void xa_decode_data( xa_decode_t *xdp, unsigned char *srcp ) {
 //===  XA SPECIFIC ROUTINES
 //============================================
 typedef struct {
-U8  filenum;
-U8  channum;
-U8  submode;
-U8  coding;
+u8  filenum;
+u8  channum;
+u8  submode;
+u8  coding;
 
-U8  filenum2;
-U8  channum2;
-U8  submode2;
-U8  coding2;
+u8  filenum2;
+u8  channum2;
+u8  submode2;
+u8  coding2;
 } xa_subheader_t;
 
 #define SUB_SUB_EOF     (1<<7)  // end of file
@@ -341,7 +341,7 @@ static int parse_xa_audio_sector( xa_decode_t *xdp,
 //===                  - 0 for any other successive sector
 //=== return -1 if error
 //================================================================
-long xa_decode_sector( xa_decode_t *xdp,
+s32 xa_decode_sector( xa_decode_t *xdp,
 					   unsigned char *sectorp, int is_first_sector ) {
 	if (parse_xa_audio_sector(xdp, (xa_subheader_t *)sectorp, sectorp + sizeof(xa_subheader_t), is_first_sector))
 		return -1;

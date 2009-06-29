@@ -1,31 +1,28 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+/*
+* Plugin library callback/access functions.
+*/
 
-#define EXT
-#include "PsxCommon.h"
-
-#ifdef _MSC_VER_
-#pragma warning(disable:4244)
-#endif
+#include "plugins.h"
 
 #define CheckErr(func) \
     err = SysLibError(); \
@@ -33,7 +30,7 @@
 
 #if defined (__MACOSX__)
 #define LoadSym(dest, src, name, checkerr) \
-    dest = (src) SysLoadSym(drv, name); \
+    dest = (src) SysLoadSym(drv, "_" name); \
     if(!checkerr) { SysLibError(); /*clean error*/ } \
     if (checkerr == 1) CheckErr(name); \
     if (checkerr == 2) { err = SysLibError(); if (err != NULL) errval = 1; }
@@ -48,18 +45,15 @@ static int errval;
 
 void *hGPUDriver;
 
-void ConfigurePlugins();
-
-void CALLBACK GPU__readDataMem(unsigned long *pMem, int iSize) {
+void CALLBACK GPU__readDataMem(uint32_t *pMem, int iSize) {
 	while (iSize > 0) {
-		*pMem = GPU_readData();
-                *pMem = SWAP32(*pMem);
+		*pMem = SWAP32(GPU_readData());
 		iSize--;
 		pMem++;
-	}
+	}		
 }
 
-void CALLBACK GPU__writeDataMem(unsigned long *pMem, int iSize) {
+void CALLBACK GPU__writeDataMem(uint32_t *pMem, int iSize) {
 	while (iSize > 0) {
 		GPU_writeData(SWAP32(*pMem));
 		iSize--;
@@ -72,7 +66,7 @@ void CALLBACK GPU__displayText(char *pText) {
 }
 
 extern int StatesC;
-long CALLBACK GPU__freeze(unsigned long ulGetFreezeData, GPUFreeze_t *pF) {
+long CALLBACK GPU__freeze(uint32_t ulGetFreezeData, GPUFreeze_t *pF) {
 	pF->ulFreezeVersion = 1;
 	if (ulGetFreezeData == 0) {
 		int val;
@@ -84,7 +78,7 @@ long CALLBACK GPU__freeze(unsigned long ulGetFreezeData, GPUFreeze_t *pF) {
 		GPU_writeData(0xa0000000);
 		GPU_writeData(0x00000000);
 		GPU_writeData(0x02000400);
-		GPU_writeDataMem((unsigned long*)pF->psxVRam, 0x100000/4);
+		GPU_writeDataMem((uint32_t*)pF->psxVRam, 0x100000/4);
 		GPU_writeStatus(val);
 
 		val = pF->ulStatus;
@@ -112,7 +106,7 @@ long CALLBACK GPU__freeze(unsigned long ulGetFreezeData, GPUFreeze_t *pF) {
 		GPU_writeData(0xc0000000);
 		GPU_writeData(0x00000000);
 		GPU_writeData(0x02000400);
-		GPU_readDataMem((unsigned long*)pF->psxVRam, 0x100000/4);
+		GPU_readDataMem((uint32_t*)pF->psxVRam, 0x100000/4);
 		GPU_writeStatus(val);
 
 		pF->ulStatus = GPU_readStatus();
@@ -129,7 +123,7 @@ long CALLBACK GPU__freeze(unsigned long ulGetFreezeData, GPUFreeze_t *pF) {
 		long lSlotNum=*((long *)pF);
 		char Text[32];
 
-		sprintf (Text, "*PCSX*: Selected State %ld", lSlotNum+1);
+		sprintf (Text, "Selected state %ld", lSlotNum+1);
 		GPU_displayText(Text);
 		return 1;
 	}
@@ -161,7 +155,7 @@ int LoadGPUplugin(char *GPUdll) {
 	hGPUDriver = SysLoadLibrary(GPUdll);
 	if (hGPUDriver == NULL) { 
 		GPU_configure = NULL;
-		SysMessage (_("Could Not Load GPU Plugin %s"), GPUdll); return -1; 
+		SysMessage (_("Could not load GPU plugin %s!"), GPUdll); return -1; 
 	}
 	drv = hGPUDriver;
 	LoadGpuSym1(init, "GPUinit");
@@ -206,6 +200,7 @@ unsigned char* CALLBACK CDR__getBufferSub(void) { return NULL; }
 long CALLBACK CDR__configure(void) { return 0; }
 long CALLBACK CDR__test(void) { return 0; }
 void CALLBACK CDR__about(void) {}
+long CALLBACK CDR__setfilename(char*filename) { return 0; }
 
 #define LoadCdrSym1(dest, name) \
 	LoadSym(CDR_##dest, CDR##dest, name, 1);
@@ -223,7 +218,7 @@ int LoadCDRplugin(char *CDRdll) {
 	hCDRDriver = SysLoadLibrary(CDRdll);
 	if (hCDRDriver == NULL) {
 		CDR_configure = NULL;
-		SysMessage (_("Could Not load CDR plugin %s"), CDRdll);  return -1;
+		SysMessage (_("Could not load CD-ROM plugin %s!"), CDRdll);  return -1;
 	}
 	drv = hCDRDriver;
 	LoadCdrSym1(init, "CDRinit");
@@ -242,6 +237,7 @@ int LoadCDRplugin(char *CDRdll) {
 	LoadCdrSym0(configure, "CDRconfigure");
 	LoadCdrSym0(test, "CDRtest");
 	LoadCdrSym0(about, "CDRabout");
+	LoadCdrSym0(setfilename, "CDRsetfilename");
 
 	return 0;
 }
@@ -256,8 +252,8 @@ unsigned short regArea[10000];
 unsigned short spuCtrl,spuStat,spuIrq;
 unsigned long spuAddr;
 
-void CALLBACK SPU__writeRegister(unsigned long add,unsigned short value) { // Old Interface
-	unsigned long r=add&0xfff;
+void CALLBACK SPU__writeRegister(uint32_t add,unsigned short value) { // Old Interface
+	uint32_t r=add&0xfff;
 	regArea[(r-0xc00)/2] = value;
 
 	if(r>=0x0c00 && r<0x0d80) {
@@ -302,7 +298,7 @@ void CALLBACK SPU__writeRegister(unsigned long add,unsigned short value) { // Ol
 
 	switch(r) {
 		case H_SPUaddr://SPU-memory address
-    			spuAddr = (unsigned long) value<<3;
+    			spuAddr = (uint32_t) value<<3;
 		//	spuAddr=value * 8;
     			return;
 		case H_SPUdata://DATA to SPU
@@ -336,7 +332,7 @@ void CALLBACK SPU__writeRegister(unsigned long add,unsigned short value) { // Ol
 	}
 }
 
-unsigned short CALLBACK SPU__readRegister(unsigned long add) {
+unsigned short CALLBACK SPU__readRegister(uint32_t add) {
 	switch(add&0xfff) {// Old Interface
 		case H_SPUctrl://spu control
     			return spuCtrl;
@@ -360,14 +356,13 @@ unsigned short CALLBACK SPU__readRegister(unsigned long add) {
 }
 
 void CALLBACK SPU__writeDMA(unsigned short val) {
-	SPU_putOne(spuAddr, SWAP16(val));
+	SPU_putOne(spuAddr, val);
 	spuAddr += 2;
 	if (spuAddr > 0x7ffff) spuAddr = 0;
 }
 
 unsigned short CALLBACK SPU__readDMA(void) {
 	unsigned short tmp = SPU_getOne(spuAddr);
-        tmp = SWAP16(tmp);
 	spuAddr += 2;
 	if (spuAddr > 0x7ffff) spuAddr = 0;
 	return tmp;
@@ -375,7 +370,7 @@ unsigned short CALLBACK SPU__readDMA(void) {
 
 void CALLBACK SPU__writeDMAMem(unsigned short *pMem, int iSize) {
 	while (iSize > 0) {
-		SPU_writeDMA(SWAP16p(pMem));
+		SPU_writeDMA(*pMem);
 		iSize--;
 		pMem++;
 	}		
@@ -384,7 +379,6 @@ void CALLBACK SPU__writeDMAMem(unsigned short *pMem, int iSize) {
 void CALLBACK SPU__readDMAMem(unsigned short *pMem, int iSize) {
 	while (iSize > 0) {
 		*pMem = SPU_readDMA();
-		*pMem = SWAP16p(pMem);
 		iSize--;
 		pMem++;
 	}		
@@ -392,7 +386,7 @@ void CALLBACK SPU__readDMAMem(unsigned short *pMem, int iSize) {
 
 void CALLBACK SPU__playADPCMchannel(xa_decode_t *xap) {}
 
-long CALLBACK SPU__freeze(unsigned long ulFreezeMode, SPUFreeze_t *pF) {
+long CALLBACK SPU__freeze(uint32_t ulFreezeMode, SPUFreeze_t *pF) {
 	if (ulFreezeMode == 2) {
 		memset(pF, 0, 16);
 		strcpy((char *)pF->PluginName, "Pcsx");
@@ -402,7 +396,7 @@ long CALLBACK SPU__freeze(unsigned long ulFreezeMode, SPUFreeze_t *pF) {
 		return 1;
 	}
 	if (ulFreezeMode == 1) {
-		unsigned long addr;
+		uint32_t addr;
 		unsigned short val;
 
 		val = SPU_readRegister(0x1f801da6);
@@ -418,7 +412,7 @@ long CALLBACK SPU__freeze(unsigned long ulFreezeMode, SPUFreeze_t *pF) {
 		return 1;
 	}
 	if (ulFreezeMode == 0) {
-		unsigned long addr;
+		uint32_t addr;
 		unsigned short val;
 		unsigned short *regs = (unsigned short *)pF->SPUPorts;
 
@@ -463,7 +457,7 @@ int LoadSPUplugin(char *SPUdll) {
 	hSPUDriver = SysLoadLibrary(SPUdll);
 	if (hSPUDriver == NULL) {
 		SPU_configure = NULL;
-		SysMessage (_("Could not open SPU plugin %s"), SPUdll); return -1;
+		SysMessage (_("Could not load SPU plugin %s!"), SPUdll); return -1;
 	}
 	drv = hSPUDriver;
 	LoadSpuSym1(init, "SPUinit");
@@ -567,7 +561,6 @@ unsigned char _PADstartPoll(PadDataS *pad) {
 
 			memcpy(buf, stdpar, 5);
 			bufcount = 4;
-			break;
 	}
 
 	return buf[bufc++];
@@ -612,7 +605,7 @@ int LoadPAD1plugin(char *PAD1dll) {
 	hPAD1Driver = SysLoadLibrary(PAD1dll);
 	if (hPAD1Driver == NULL) {
 		PAD1_configure = NULL;
-		SysMessage (_("Could Not load PAD1 plugin %s"), PAD1dll); return -1;
+		SysMessage (_("Could not load Controller 1 plugin %s!"), PAD1dll); return -1;
 	}
 	drv = hPAD1Driver;
 	LoadPad1Sym1(init, "PADinit");
@@ -666,7 +659,7 @@ int LoadPAD2plugin(char *PAD2dll) {
 	hPAD2Driver = SysLoadLibrary(PAD2dll);
 	if (hPAD2Driver == NULL) {
 		PAD2_configure = NULL;
-		SysMessage (_("Could Not load PAD plugin %s"), PAD2dll); return -1;
+		SysMessage (_("Could not load Controller 2 plugin %s!"), PAD2dll); return -1;
 	}
 	drv = hPAD2Driver;
 	LoadPad2Sym1(init, "PADinit");
@@ -709,7 +702,7 @@ int LoadNETplugin(char *NETdll) {
 
 	hNETDriver = SysLoadLibrary(NETdll);
 	if (hNETDriver == NULL) {
-		SysMessage (_("Could Not load NET plugin %s"), NETdll); return -1;
+		SysMessage (_("Could not load NetPlay plugin %s!"), NETdll); return -1;
 	}
 	drv = hNETDriver;
 	LoadNetSym1(init, "NETinit");
@@ -736,73 +729,78 @@ void CALLBACK clearDynarec(void) {
 	psxCpu->Reset();
 }
 
+/* TODO If there's an error, need to notify user which plugin failed, rather than silently fail */
 int LoadPlugins() {
 	int ret;
-	char Plugin[256];
+	gchar *Plugin;
 
-	sprintf(Plugin, "%s%s", Config.PluginsDir, Config.Cdr);
-	if (LoadCDRplugin(Plugin) == -1) return -1;
-	sprintf(Plugin, "%s%s", Config.PluginsDir, Config.Gpu);
+	Plugin = g_build_filename (Config.PluginsDir, Config.Cdr, NULL);
+	if (LoadCDRplugin (Plugin) == -1) return -1;
+	Plugin = g_build_filename (Config.PluginsDir, Config.Gpu, NULL);
 	if (LoadGPUplugin(Plugin) == -1) return -1;
-	sprintf(Plugin, "%s%s", Config.PluginsDir, Config.Spu);
+	Plugin = g_build_filename (Config.PluginsDir, Config.Spu, NULL);
 	if (LoadSPUplugin(Plugin) == -1) return -1;
-	sprintf(Plugin, "%s%s", Config.PluginsDir, Config.Pad1);
+	Plugin = g_build_filename (Config.PluginsDir, Config.Pad1, NULL);
 	if (LoadPAD1plugin(Plugin) == -1) return -1;
-	sprintf(Plugin, "%s%s", Config.PluginsDir, Config.Pad2);
+	Plugin = g_build_filename (Config.PluginsDir, Config.Pad2, NULL);
 	if (LoadPAD2plugin(Plugin) == -1) return -1;
-
+	
+	g_free (Plugin);
+	
+#ifdef NETWORKING_ENABLED
 	if (!strcmp("Disabled", Config.Net)) Config.UseNet = 0;
 	else {
 		Config.UseNet = 1;
-		sprintf(Plugin, "%s%s", Config.PluginsDir, Config.Net);
+		sprintf(Plugin, "%s%s", dotdir, Config.Net);
 		if (LoadNETplugin(Plugin) == -1) return -1;
 	}
-
-#ifndef __MACOSX__
+#endif /* NETWORKING_ENABLED */
+	/* TODO Proper error code handling - report the appropriate error */
 	ret = CDR_init();
-	if (ret < 0) { SysMessage (_("CDRinit error : %d"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error initializing CD-ROM plugin: %d"), ret); return -1; }
 	ret = GPU_init();
-	if (ret < 0) { SysMessage (_("GPUinit error: %d"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error initializing GPU plugin: %d"), ret); return -1; }
 	ret = SPU_init();
-	if (ret < 0) { SysMessage (_("SPUinit error: %d"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error initializing SPU plugin: %d"), ret); return -1; }
 	ret = PAD1_init(1);
-	if (ret < 0) { SysMessage (_("PAD1init error: %d"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error initializing Controller 1 plugin: %d"), ret); return -1; }
 	ret = PAD2_init(2);
-	if (ret < 0) { SysMessage (_("PAD2init error: %d"), ret); return -1; }
+	if (ret < 0) { SysMessage (_("Error initializing Controller 2 plugin: %d"), ret); return -1; }
+#ifdef NETWORKING_ENABLED
 	if (Config.UseNet) {
 		ret = NET_init();
-		if (ret < 0) { SysMessage (_("NETinit error: %d"), ret); return -1; }
+		if (ret < 0) { SysMessage (_("Error initializing NetPlay plugin: %d"), ret); return -1; }
 	}
-#endif
-
+#endif /* NETWORKING_ENABLED */
 	return 0;
 }
 
 void ReleasePlugins() {
 	if (hCDRDriver  == NULL || hGPUDriver  == NULL || hSPUDriver == NULL ||
 		hPAD1Driver == NULL || hPAD2Driver == NULL) return;
-
+#ifdef NETWORKING_ENABLED
 	if (Config.UseNet) {
 		int ret = NET_close();
 		if (ret < 0) Config.UseNet = 0;
 		NetOpened = 0;
 	}
-
-#ifndef __MACOSX__
+#endif /* NETWORKING_ENABLED */
 	CDR_shutdown();
 	GPU_shutdown();
 	SPU_shutdown();
 	PAD1_shutdown();
 	PAD2_shutdown();
+#ifdef NETWORKING_ENABLED
 	if (Config.UseNet && hNETDriver != NULL) NET_shutdown(); 
-#endif
-
+#endif /* NETWORKING_ENABLED */
 	SysCloseLibrary(hCDRDriver); hCDRDriver = NULL;
 	SysCloseLibrary(hGPUDriver); hGPUDriver = NULL;
 	SysCloseLibrary(hSPUDriver); hSPUDriver = NULL;
 	SysCloseLibrary(hPAD1Driver); hPAD1Driver = NULL;
 	SysCloseLibrary(hPAD2Driver); hPAD2Driver = NULL;
+#ifdef NETWORKING_ENABLED
 	if (Config.UseNet && hNETDriver != NULL) {
 		SysCloseLibrary(hNETDriver); hNETDriver = NULL;
 	}
+#endif /* NETWORKING_ENABLED */
 }

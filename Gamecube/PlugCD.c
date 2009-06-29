@@ -17,6 +17,9 @@
 #include "plugins.h"
 #include "PlugCD.h"
 #include "PsxCommon.h"
+
+extern void SysPrintf(char *fmt, ...);
+
 // gets track 
 long getTN(unsigned char* buffer)
 {
@@ -367,6 +370,10 @@ long CDR__init(void) {
 	char* filename = textFileBrowser("/PSXISOS");
 	char* last_slash = strrchr(filename, '/');
 	*last_slash = 0; // Separate the strings
+	if(!filename) {
+	  SysPrintf("/PSXISOS directory doesn't exist!\n");
+	  while(1);
+  }
 	strcpy(CDConfiguration.dn, filename);
 	strcpy(CDConfiguration.fn, last_slash+1);
 	free(filename);

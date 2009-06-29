@@ -1,6 +1,8 @@
 
-#include "PsxCommon.h"
+#include "../psxcommon.h"
 #include "reguse.h"
+
+#include "../r3000a.h"
 
 //#define SAME_CYCLE_MODE
 
@@ -196,7 +198,7 @@ static const int useCP2BSC[32] = {
         REGUSE_NONE
 };
 
-//static int getRegUse(u32 code) __attribute__ ((__pure__));
+static int getRegUse(u32 code) __attribute__ ((__pure__));
 static int getRegUse(u32 code)
 {
     int use = useBSC[code>>26];
@@ -269,7 +271,7 @@ int useOfPsxReg(u32 code, int use, int psxreg)
 
 //#define NOREGUSE_FOLLOW
 
-//static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr) __attribute__ ((__pure__, __unused__));
+static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr) __attribute__ ((__pure__, __unused__));
 static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr)
 {
     u32 *ptr, code, bPC = 0;
@@ -277,13 +279,13 @@ static int _nextPsxRegUse(u32 pc, int psxreg, int numInstr)
 
     for (i=0; i<numInstr; ) {
         // load current instruction
-		  ptr = PSXM(pc);
+		  ptr = (u32*)PSXM(pc);
 		  if (ptr==NULL) {
 				// going nowhere... might as well assume a write, since we will hopefully never reach here
 				reguse = REGUSE_WRITE;
 				break;
 		  }
-		  code = SWAP32p(ptr);
+		  code = SWAP32(*ptr);
 		  // get usage patterns for instruction
 		  use = getRegUse(code);
 		  // find the use of psxreg in the instruction
@@ -359,7 +361,7 @@ int nextPsxRegUse(u32 pc, int psxreg)
 
 retry:
     for (i=index; i<80; i++) {
-        code = SWAP32p(PSXM(pc));
+        code = PSXMu32(pc);
     	use = getRegUse(code);
         reguse = useOfPsxReg(code, use, psxreg);
         
