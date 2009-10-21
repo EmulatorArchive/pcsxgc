@@ -284,6 +284,7 @@ void BlitScreenNS_GX(unsigned char * surf,long x,long y, short dx, short dy)
  if(PSXDisplay.RGB24)
   {
    unsigned char * pD;unsigned int startxy;
+   DEBUG_print("BlitScreenNSGX: RGB24",DBG_GPU1+1);
 
    surf+=PreviousPSXDisplay.Range.x0<<1;
 #ifdef USE_DGA2
@@ -309,6 +310,7 @@ void BlitScreenNS_GX(unsigned char * surf,long x,long y, short dx, short dy)
   {
    unsigned long * SRCPtr = (unsigned long *)(psxVuw +
                              (y<<10) + x);
+   DEBUG_print("BlitScreenNSGX: Not RGB24",DBG_GPU1+1);
 
    unsigned long * DSTPtr =
     ((unsigned long *)surf)+(PreviousPSXDisplay.Range.x0>>1);
